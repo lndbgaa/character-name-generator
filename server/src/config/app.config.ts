@@ -1,10 +1,39 @@
 import dotenv from "dotenv";
-dotenv.config();
+import fs from "fs";
+import path from "path";
 
-const port = process.env.PORT ? Number(process.env.PORT) : 8080;
+import getEnvVar from "@/utils/getEnvVar.js";
+
+const env = process.env.NODE_ENV ?? "development";
+const envPath = path.resolve(process.cwd(), `.env.${env}`);
+
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+  console.log(`✅ .env.${env} loaded`);
+} else {
+  dotenv.config();
+  console.log(`⚠️ .env.${env} non trouvé. Chargement de .env par défaut`);
+}
+
+const serverUrl = env === "production" ? getEnvVar("SERVER_URL") : "http://localhost:8080";
+const clientUrl = env === "production" ? getEnvVar("CLIENT_URL") : "http://localhost:5173";
 
 const config = {
-  port,
+  env,
+  serverUrl,
+  clientUrl,
+  port: process.env.PORT ? Number(process.env.PORT) : 8080,
+  mysql: {
+    port: process.env.MYSQL_PORT ? Number(process.env.MYSQL_PORT) : 3306,
+    host: getEnvVar("MYSQL_HOST"),
+    user: getEnvVar("MYSQL_USER"),
+    password: getEnvVar("MYSQL_PWD"),
+    database: getEnvVar("MYSQL_NAME"),
+  },
+  mongo: {
+    uri: getEnvVar("MONGO_URI"),
+    database: getEnvVar("MONGO_NAME"),
+  },
 };
 
 export default config;
