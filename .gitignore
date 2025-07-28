@@ -1,0 +1,14 @@
+.vscode/*
+*.swp
+*.swo
+*~
+node_modules/
+dist/
+logs/
+*.log
+npm-debug.log*
+*.env*
+.DS_Store
+.prettierrc
+
+
