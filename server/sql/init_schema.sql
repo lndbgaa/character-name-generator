@@ -3,8 +3,6 @@ CREATE TABLE universes (
   label VARCHAR(50) NOT NULL UNIQUE,
   display_name VARCHAR(100) NOT NULL,
   description TEXT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE types (
@@ -14,8 +12,6 @@ CREATE TABLE types (
   description TEXT NULL,
   icon_url VARCHAR(255) NULL,
   universe_id INT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (universe_id) REFERENCES universes(id) ON DELETE RESTRICT,
   INDEX idx_types_universe_id (universe_id)
 );
@@ -24,8 +20,6 @@ CREATE TABLE genders (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   label VARCHAR(50) NOT NULL UNIQUE, 
   display_name VARCHAR(100) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE names (
@@ -38,7 +32,8 @@ CREATE TABLE names (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (type_id) REFERENCES types(id) ON DELETE RESTRICT,
   FOREIGN KEY (gender_id) REFERENCES genders(id) ON DELETE RESTRICT,
-  UNIQUE(name, type_id), 
+  CONSTRAINT uniq_names_name_type UNIQUE (name, type_id),
+  INDEX idx_names_type (type_id),
   INDEX idx_names_type_gender (type_id, gender_id)
 );
 
@@ -48,8 +43,8 @@ CREATE TABLE users (
   pseudo VARCHAR(50) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
   first_name VARCHAR(50) NOT NULL,
-  last_name VARCHAR(50) NOT NULL,
-  avatar_url VARCHAR(255),
+  last_name VARCHAR(100) NOT NULL,
+  avatar_url VARCHAR(255) NULL,
   status ENUM('active', 'suspended', 'deleted') DEFAULT 'active',
   last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -98,7 +93,7 @@ CREATE TABLE favorites (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (name_id) REFERENCES names(id) ON DELETE CASCADE,
-  UNIQUE (user_id, name_id),
+  CONSTRAINT uniq_favorites_user_name UNIQUE (user_id, name_id),
   INDEX idx_favorites_user_id (user_id)
 );
 
