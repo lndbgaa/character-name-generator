@@ -1,0 +1,22 @@
+[
+  { "name": "Alzareth", "gender": "male" },
+  { "name": "Thalorim", "gender": "male" },
+  { "name": "Vandrel", "gender": "male" },
+  { "name": "Kaelmir", "gender": "male" },
+  { "name": "Orvandar", "gender": "male" },
+  { "name": "Zephyros", "gender": "male" },
+  { "name": "Malveric", "gender": "male" },
+  { "name": "Eldrion", "gender": "male" },
+  { "name": "Dravenor", "gender": "male" },
+  { "name": "Torvandel", "gender": "male" },
+  { "name": "Sarnath", "gender": "male" },
+  { "name": "Belmoran", "gender": "male" },
+  { "name": "Ithamar", "gender": "male" },
+  { "name": "Calzareth", "gender": "male" },
+  { "name": "Zarion", "gender": "male" },
+  { "name": "Magnor", "gender": "male" },
+  { "name": "Vorathar", "gender": "male" },
+  { "name": "Nemorin", "gender": "male" },
+  { "name": "Azuran", "gender": "male" },
+  { "name": "Faelgor", "gender": "male" }
+]

@@ -1,0 +1,22 @@
+[
+  { "name": "Azrath", "gender": "male" },
+  { "name": "Lilixia", "gender": "female" },
+  { "name": "Belgorak", "gender": "male" },
+  { "name": "Sythara", "gender": "female" },
+  { "name": "Drazul", "gender": "male" },
+  { "name": "Mordissa", "gender": "female" },
+  { "name": "Xeraziel", "gender": "male" },
+  { "name": "Vyrexa", "gender": "female" },
+  { "name": "Karnavos", "gender": "male" },
+  { "name": "Nephariel", "gender": "female" },
+  { "name": "Ravokh", "gender": "male" },
+  { "name": "Zalaria", "gender": "female" },
+  { "name": "Thamuz", "gender": "male" },
+  { "name": "Ereshka", "gender": "female" },
+  { "name": "Molgrith", "gender": "male" },
+  { "name": "Drusilva", "gender": "female" },
+  { "name": "Vornath", "gender": "male" },
+  { "name": "Nymoria", "gender": "female" },
+  { "name": "Kaelzhar", "gender": "male" },
+  { "name": "Asmodra", "gender": "female" }
+]

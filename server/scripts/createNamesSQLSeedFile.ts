@@ -13,6 +13,18 @@ const typeMap = {
   elf: 1,
   human: 2,
   dragon: 3,
+  orc: 4,
+  fairy: 5,
+  angel: 6,
+  vampire: 7,
+  demon: 8,
+  wizard: 9,
+  witch: 10,
+  siren: 11,
+  goblin: 12,
+  harpy: 13,
+  werewolf: 14,
+  pirate: 15,
 } as const;
 
 const genderMap = {

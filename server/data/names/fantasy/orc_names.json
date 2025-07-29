@@ -1,0 +1,22 @@
+[
+  { "name": "Gorzug", "gender": "male" },
+  { "name": "Thrakha", "gender": "female" },
+  { "name": "Morgul", "gender": "male" },
+  { "name": "Urzak", "gender": "male" },
+  { "name": "Drogma", "gender": "female" },
+  { "name": "Krogar", "gender": "male" },
+  { "name": "Zurgha", "gender": "female" },
+  { "name": "Brakka", "gender": "female" },
+  { "name": "Varnok", "gender": "male" },
+  { "name": "Grishnak", "gender": "male" },
+  { "name": "Shorga", "gender": "female" },
+  { "name": "Kraghul", "gender": "male" },
+  { "name": "Draktha", "gender": "female" },
+  { "name": "Snarbog", "gender": "male" },
+  { "name": "Malgor", "gender": "male" },
+  { "name": "Ruznuk", "gender": "male" },
+  { "name": "Skarnash", "gender": "male" },
+  { "name": "Grugda", "gender": "female" },
+  { "name": "Torvak", "gender": "male" },
+  { "name": "Zagroth", "gender": "male" }
+]

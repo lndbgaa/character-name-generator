@@ -1,0 +1,22 @@
+[
+  { "name": "Varkun", "gender": "male" },
+  { "name": "Lyssar", "gender": "female" },
+  { "name": "Drogath", "gender": "male" },
+  { "name": "Maelka", "gender": "female" },
+  { "name": "Karnok", "gender": "male" },
+  { "name": "Thiraya", "gender": "female" },
+  { "name": "Ravgar", "gender": "male" },
+  { "name": "Selka", "gender": "female" },
+  { "name": "Balthrok", "gender": "male" },
+  { "name": "Nymera", "gender": "female" },
+  { "name": "Grathul", "gender": "male" },
+  { "name": "Velmira", "gender": "female" },
+  { "name": "Zorvak", "gender": "male" },
+  { "name": "Kaelyra", "gender": "female" },
+  { "name": "Dravenok", "gender": "male" },
+  { "name": "Syralia", "gender": "female" },
+  { "name": "Fenrik", "gender": "male" },
+  { "name": "Morwyn", "gender": "female" },
+  { "name": "Ulgrath", "gender": "male" },
+  { "name": "Vaelith", "gender": "female" }
+]

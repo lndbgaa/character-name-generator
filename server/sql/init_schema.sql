@@ -2,7 +2,7 @@ CREATE TABLE universes (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   label VARCHAR(50) NOT NULL UNIQUE,
   display_name VARCHAR(100) NOT NULL,
-  description TEXT NULL,
+  description TEXT NULL
 );
 
 CREATE TABLE types (
@@ -19,7 +19,7 @@ CREATE TABLE types (
 CREATE TABLE genders (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   label VARCHAR(50) NOT NULL UNIQUE, 
-  display_name VARCHAR(100) NOT NULL,
+  display_name VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE names (
