@@ -2,13 +2,7 @@ import { Sequelize } from "sequelize";
 
 import config from "@/config/app.config.js";
 
-interface MySQLConfig {
-  host: string;
-  port: number;
-  user: string;
-  password: string;
-  database: string;
-}
+import type { MySQLConfig } from "@/types/config";
 
 const { env } = config;
 const { mysql }: { mysql: MySQLConfig } = config;

@@ -5,12 +5,15 @@
   "type": "module",
   "scripts": {
     "clean": "rm -rf ./dist",
-    "build": "npm run clean && tsc && tsc-alias && cp -r src/templates dist/templates",
+    "build": "npm run clean && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json && cp -r src/templates dist/templates",
     "start": "node ./dist/app.js",
     "preview": "npm run build && npm run start",
     "dev": "tsx watch ./src/app.ts",
     "debug": "tsx watch --inspect ./src/app.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:build:names:mysql": "tsx ./scripts/createNamesSQLSeedFile.ts",
+    "db:init:mysql": "npm run db:build:names:mysql && tsx ./scripts/initMySQLDatabase.ts",
+    "db:reset:mysql": "npm run db:build:names:mysql && tsx ./scripts/resetMySQLDatabase.ts"
   },
   "keywords": [],
   "author": "",
@@ -22,7 +25,8 @@
     "mongoose": "^8.16.5",
     "mysql2": "^3.14.2",
     "sequelize": "^6.37.7",
-    "tsx": "^4.20.3"
+    "tsx": "^4.20.3",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",

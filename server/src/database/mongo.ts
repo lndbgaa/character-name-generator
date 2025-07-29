@@ -2,10 +2,7 @@ import mongoose from "mongoose";
 
 import config from "@/config/app.config.js";
 
-interface MongoDBConfig {
-  uri: string;
-  database: string;
-}
+import type { MongoDBConfig } from "@/types/config";
 
 const { mongo }: { mongo: MongoDBConfig } = config;
 const { uri, database } = mongo;
