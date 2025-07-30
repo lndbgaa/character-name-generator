@@ -3,7 +3,7 @@ import mysql from "mysql2/promise";
 
 import config from "@/config/app.config.js";
 
-import type { MySQLConfig } from "@/types/config";
+import type { MySQLConfig } from "@/types/config.js";
 
 const { mysql: mysqlConfig }: { mysql: MySQLConfig } = config;
 const { user, host, password, database } = mysqlConfig;

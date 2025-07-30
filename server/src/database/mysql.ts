@@ -2,7 +2,7 @@ import { Sequelize } from "sequelize";
 
 import config from "@/config/app.config.js";
 
-import type { MySQLConfig } from "@/types/config";
+import type { MySQLConfig } from "@/types/config.js";
 
 const { env } = config;
 const { mysql }: { mysql: MySQLConfig } = config;

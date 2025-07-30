@@ -12,7 +12,7 @@ if (fs.existsSync(envPath)) {
   console.log(`✅ .env.${env} loaded`);
 } else {
   dotenv.config();
-  console.log(`⚠️ .env.${env} non trouvé. Chargement de .env par défaut`);
+  console.log(`⚠️ .env.${env} not found. Falling back to default .env file`);
 }
 
 const serverUrl = env === "production" ? getEnvVar("SERVER_URL") : "http://localhost:8080";
