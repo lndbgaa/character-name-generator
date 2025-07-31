@@ -10,6 +10,7 @@ const resetDB = async (): Promise<void> => {
   const files = [
     path.resolve(__dirname, "../sql/drop_schema.sql"),
     path.resolve(__dirname, "../sql/init_schema.sql"),
+    path.resolve(__dirname, "../sql/seeds/seed_roles.sql"),
     path.resolve(__dirname, "../sql/seeds/seed_universes.sql"),
     path.resolve(__dirname, "../sql/seeds/seed_types.sql"),
     path.resolve(__dirname, "../sql/seeds/seed_genders.sql"),

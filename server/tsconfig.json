@@ -23,6 +23,7 @@
     "baseUrl": "./",
     "paths": {
       "@/config/*": ["src/config/*"],
+      "@/constants/*": ["src/constants/*"],
       "@/controllers/*": ["src/controllers/*"],
       "@/database/*": ["src/database/*"],
       "@/middlewares/*": ["src/middlewares/*"],

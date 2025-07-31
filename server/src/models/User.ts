@@ -3,46 +3,49 @@ import dayjs from "dayjs";
 import { DataTypes, Model } from "sequelize";
 
 import { sequelize } from "@/database/mysql.js";
-import { nameRegex, passwordRegex, pseudoRegex } from "@/validators/patterns.js";
+import { nameRegex, passwordRegex, usernameRegex } from "@/validators/patterns.js";
 
+import type { Role } from "@/models/index.js";
 import type { SaveOptions } from "sequelize";
 
-type UserStatus = "active" | "suspended" | "deleted";
+type UserAccountStatus = "active" | "suspended" | "deleted";
 
 /**
  * The "User" entity represents a registered user of the application.
  *
- * User passwords are automatically hashed before being saved to the database.
- *
- *  Fields:
- * - `id`: UUID identifier
- * - `email`: unique email address, used for login
- * - `pseudo`: unique public username (3–20 characters)
- * - `password`: hashed user password (8–100 characters)
- * - `first_name`: user's first name (2–50 characters)
- * - `last_name`: user's last name (2–100 characters)
- * - `avatar_url`: optional URL to the user's avatar image
- * - `status`: current account status ("active", "suspended", "deleted")
- * - `last_login`: timestamp of the last successful login
- * - `suspended_at`: timestamp of suspension, if applicable
- * - `deleted_at`: timestamp of soft deletion, if applicable
+ * Fields:
+ * - `id`: UUID identifier, primary key for the user.
+ * - `role_id`: foreign key referring to the user's role (e.g., user, admin). Defaults to role_id = 2 ("user").
+ * - `email`: unique email address, used for authentication and communication.
+ * - `username`: unique public username (3–20 characters).
+ * - `password`: hashed password (8–100 characters).
+ * - `first_name`: user's first name (2–50 characters).
+ * - `last_name`: user's last name (2–100 characters).
+ * - `avatar_url`: optional URL string pointing to the user's avatar image.
+ * - `status`: account status — can be "active", "suspended", or "deleted".
+ * - `last_login`: timestamp of the user's most recent successful login.
+ * - `suspended_at`: timestamp marking when the account was suspended (nullable).
+ * - `deleted_at`: timestamp marking when the account was soft-deleted (nullable).
  * - `created_at`: automatic creation timestamp
  * - `updated_at`: automatic update timestamp
  */
 export default class User extends Model {
   declare id: string;
+  declare role_id: number;
   declare email: string;
-  declare pseudo: string;
+  declare username: string;
   declare password: string;
   declare first_name: string;
   declare last_name: string;
   declare avatar_url: string | null;
-  declare status: UserStatus;
+  declare status: UserAccountStatus;
   declare last_login: Date;
   declare created_at: Date;
   declare updated_at: Date;
   declare suspended_at: Date | null;
   declare deleted_at: Date | null;
+
+  declare role?: Role;
 
   public async checkPassword(plainPassword: string): Promise<boolean> {
     return await bcrypt.compare(plainPassword, this.password);
@@ -103,6 +106,13 @@ User.init(
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4,
     },
+    role_id: {
+      type: DataTypes.INTEGER,
+      defaultValue: 2,
+      references: { model: "roles", key: "id" },
+      onUpdate: "CASCADE",
+      onDelete: "RESTRICT",
+    },
     email: {
       type: DataTypes.STRING(100),
       allowNull: false,
@@ -112,14 +122,14 @@ User.init(
         notEmpty: true,
       },
     },
-    pseudo: {
+    username: {
       type: DataTypes.STRING(50),
       allowNull: false,
       unique: true,
       validate: {
         notEmpty: true,
         len: [3, 20],
-        is: pseudoRegex,
+        is: usernameRegex,
       },
     },
     password: {

@@ -10,6 +10,7 @@ interface LogErrorArgs {
   statusCode: number;
   statusText: string;
   message: string;
+  debugMessage?: string;
   details?: ErrorDetails;
   code?: string;
   stack?: string | null;
@@ -19,6 +20,7 @@ interface DevLogArgs {
   statusCode: number;
   statusText: string;
   message: string;
+  debugMessage?: string;
   details?: ErrorDetails;
   code?: string;
   stack: string;
@@ -32,6 +34,7 @@ const buildDevLog = ({
   statusCode,
   statusText,
   message,
+  debugMessage,
   details,
   code,
   stack,
@@ -43,6 +46,10 @@ const buildDevLog = ({
   lines.push("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   lines.push(`${chalk!.red("→")} ${chalk.bold("Timestamp")}: ${chalk.gray(timestamp)}`);
   lines.push(`${chalk!.red("→")} ${chalk.bold("Message")} : ${chalk.white(message)}`);
+
+  if (debugMessage) {
+    lines.push(`${chalk!.red("→")} ${chalk.bold("Debug")} : ${chalk.white(debugMessage)}`);
+  }
 
   if (code) {
     lines.push(`${chalk!.red("→")} ${chalk!.bold("Code:")} ${chalk!.cyan(code)}`);
@@ -64,7 +71,7 @@ const buildDevLog = ({
 };
 
 const logError = (args: LogErrorArgs): void => {
-  const { statusCode, statusText, message, details, code, stack = null } = args;
+  const { statusCode, statusText, message, debugMessage, details, code, stack = null } = args;
 
   const timestamp = dayjs().format("YYYY-MM-DD HH:mm:ss");
 
@@ -82,6 +89,7 @@ const logError = (args: LogErrorArgs): void => {
       statusCode,
       statusText,
       message,
+      debugMessage,
       details,
       code,
       stack: formattedStack,

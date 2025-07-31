@@ -14,4 +14,6 @@ INSERT INTO types (universe_id, label, display_name, description) VALUES
 (1, 'harpy', 'Harpy', 'Winged hunters of the storm, their cries echo like thunder across desolate skies.'),
 (1, 'werewolf', 'Werewolf', 'Wild spirits caught between two natures, their howls tear through the lunar night.'),
 (1, 'pirate', 'Pirate', 'Free sailors breaking the chains of kingdoms, masters of waves and legends.')
-ON DUPLICATE KEY UPDATE label = VALUES(label);
+ON DUPLICATE KEY UPDATE
+  display_name = VALUES(display_name),
+  description = VALUES(description);

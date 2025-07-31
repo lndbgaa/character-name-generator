@@ -35,7 +35,7 @@ export default class RefreshToken extends Model {
   declare user?: User;
 
   public isValid(): boolean {
-    return this.status === "active" && dayjs().isBefore(this.expires_at) && !this.revoked_at;
+    return this.status === "active" && dayjs().isBefore(this.expires_at);
   }
 
   public async markAsRevoked(options?: SaveOptions): Promise<void> {

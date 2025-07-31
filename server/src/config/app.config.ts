@@ -4,6 +4,10 @@ import path from "path";
 
 import getEnvVar from "@/utils/getEnvVar.js";
 
+import type { StringValue } from "ms";
+
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+
 const env = process.env.NODE_ENV ?? "development";
 const envPath = path.resolve(process.cwd(), `.env.${env}`);
 
@@ -23,6 +27,11 @@ const config = {
   serverUrl,
   clientUrl,
   port: process.env.PORT ? Number(process.env.PORT) : 8080,
+  jwt: {
+    accessSecret: getEnvVar("JWT_ACCESS_SECRET"),
+    accessExpiration: (process.env.JWT_ACCESS_EXPIRATION as StringValue) ?? "10m",
+    refreshExpiration: (process.env.JWT_REFRESH_EXPIRATION as StringValue) ?? "7d",
+  },
   mysql: {
     port: process.env.MYSQL_PORT ? Number(process.env.MYSQL_PORT) : 3306,
     host: getEnvVar("MYSQL_HOST"),

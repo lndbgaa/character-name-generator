@@ -1,17 +1,24 @@
+import cookieParser from "cookie-parser";
 import express from "express";
 
 import config from "@/config/app.config.js";
 import connectMongo from "@/database/mongo.js";
 import { connectMySQL } from "@/database/mysql.js";
 import errorHandler from "@/middlewares/errorHandler.js";
+import mainRouter from "@/routes/index.js";
 import CustomError from "@/utils/CustomError.js";
 
 const app = express();
 const PORT = config.port;
 
+app.use(express.json());
+app.use(cookieParser());
+
 app.get("/", (req, res) => {
   res.json({ status: "Server is up and running!" });
 });
+
+app.use("/api/v1", mainRouter);
 
 app.use((req, res, next) => {
   next(

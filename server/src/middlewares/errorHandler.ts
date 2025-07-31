@@ -2,9 +2,9 @@ import config from "@/config/app.config.js";
 import CustomError from "@/utils/CustomError.js";
 import logError from "@/utils/logError.js";
 
-import type { ErrorRequestHandler, NextFunction, Request, Response } from "express";
+import { GENERIC_ERROR_MESSAGE } from "@/constants/index.js";
 
-const GENERIC_ERROR_MESSAGE = "Something went wrong. Please try again later.";
+import type { ErrorRequestHandler, NextFunction, Request, Response } from "express";
 
 const { env } = config;
 const isDev = env === "development";
@@ -16,16 +16,17 @@ const errorHandler: ErrorRequestHandler = (
   next: NextFunction
 ): void => {
   if (err instanceof CustomError) {
-    const { statusCode, statusText, message, isPublic, code, details, stack } = err;
+    const { statusCode, statusText, message, debugMessage, code, details, stack } = err;
 
-    logError({ statusCode, statusText, message, stack, code, details });
+    logError({ statusCode, statusText, message, debugMessage, code, details, stack });
 
     res.status(statusCode).json({
       success: false,
       statusCode,
       statusText,
       code,
-      message: isDev || isPublic ? message : GENERIC_ERROR_MESSAGE,
+      message,
+      debugMessage: isDev ? debugMessage : undefined,
       details: isDev ? details : undefined,
     });
   } else {

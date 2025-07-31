@@ -37,10 +37,17 @@ CREATE TABLE names (
   INDEX idx_names_type_gender (type_id, gender_id)
 );
 
+CREATE TABLE roles (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  label VARCHAR(50) UNIQUE NOT NULL,
+  display_name VARCHAR(100) NOT NULL
+);
+
 CREATE TABLE users (
   id CHAR(36) NOT NULL PRIMARY KEY,
+  role_id INT NOT NULL DEFAULT 2,
   email VARCHAR(100) NOT NULL UNIQUE,
-  pseudo VARCHAR(50) NOT NULL UNIQUE,
+  username VARCHAR(50) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
   first_name VARCHAR(50) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
@@ -51,6 +58,7 @@ CREATE TABLE users (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   suspended_at TIMESTAMP NULL DEFAULT NULL,
   deleted_at TIMESTAMP NULL DEFAULT NULL,
+  FOREIGN KEY (role_id) REFERENCES roles(id) ON UPDATE CASCADE ON DELETE RESTRICT,
   INDEX idx_users_status (status)
 );
 
