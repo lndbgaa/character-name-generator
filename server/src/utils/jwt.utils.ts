@@ -5,8 +5,6 @@ import CustomError from "@/utils/CustomError.js";
 import type { CustomJwtPayload } from "@/types/auth.js";
 import type { StringValue } from "ms";
 
-const { JsonWebTokenError, TokenExpiredError } = jwt;
-
 export function generateJwt(payload: CustomJwtPayload, secret: string, expiresIn: StringValue | number) {
   return jwt.sign(payload, secret, { expiresIn });
 }
@@ -25,7 +23,7 @@ export function verifyJwt(token: string, secret: string): CustomJwtPayload {
 
     return decoded as CustomJwtPayload;
   } catch (err) {
-    if (err instanceof TokenExpiredError) {
+    if (err instanceof jwt.TokenExpiredError) {
       throw new CustomError({
         statusCode: 401,
         message: "Expired token.",
@@ -33,7 +31,7 @@ export function verifyJwt(token: string, secret: string): CustomJwtPayload {
       });
     }
 
-    if (err instanceof JsonWebTokenError) {
+    if (err instanceof jwt.JsonWebTokenError) {
       throw new CustomError({
         statusCode: 401,
         message: "Invalid token.",

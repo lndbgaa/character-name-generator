@@ -1,5 +1,9 @@
 import { Router } from "express";
 
+import validate from "@/middlewares/validateAll.js";
+
+import { loginSchema, registerSchema } from "@/validators/auth.validator.js";
+
 import {
   loginUser,
   logoutUser,
@@ -9,8 +13,8 @@ import {
 
 const router = Router();
 
-router.post("/register", registerUser);
-router.post("/login", loginUser);
+router.post("/register", validate(registerSchema), registerUser);
+router.post("/login", validate(loginSchema), loginUser);
 router.post("/logout", logoutUser);
 router.post("/refresh-token", refreshUserAccessToken);
 
