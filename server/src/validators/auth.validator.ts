@@ -60,3 +60,36 @@ export const registerSchema = Joi.object({
       "Last Name must start with a letter and contain only letters, spaces, apostrophes, or hyphens.",
   }),
 });
+
+export const requestPasswordResetSchema = Joi.object({
+  email: Joi.string().label("Email").trim().lowercase().email().required().messages({
+    "any.required": "An email is required.",
+    "string.base": "Email must be a string.",
+    "string.empty": "Email must be a non-empty string.",
+    "string.email": "Email must be a valid email address.",
+  }),
+});
+
+export const verifyPasswordResetSchema = Joi.object({
+  token: Joi.string().trim().required().messages({
+    "any.required": "The password reset token is required.",
+    "string.empty": "The password reset token is required.",
+  }),
+});
+
+export const passwordResetSchema = Joi.object({
+  token: Joi.string().trim().required().messages({
+    "any.required": "The password reset token is required.",
+    "string.empty": "The password reset token is required.",
+  }),
+
+  password: Joi.string().label("Password").trim().min(8).max(100).pattern(passwordRegex).required().messages({
+    "any.required": "A password is required.",
+    "string.base": "Password must be a string.",
+    "string.empty": "Password must be a non-empty string.",
+    "string.min": "Password must be at least 8 characters long.",
+    "string.max": "Password must not exceed 100 characters.",
+    "string.pattern.base":
+      "Password must contain at least one uppercase letter, one lowercase letter, one digit, one special character, and no spaces.",
+  }),
+});

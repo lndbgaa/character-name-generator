@@ -43,6 +43,10 @@ const config = {
     uri: getEnvVar("MONGO_URI"),
     database: getEnvVar("MONGO_NAME"),
   },
+  gmail: {
+    user: getEnvVar("GMAIL_USER"),
+    pass: getEnvVar("GMAIL_PASSWORD"),
+  },
 };
 
 export default config;

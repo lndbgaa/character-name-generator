@@ -33,7 +33,7 @@ export default class AuthService {
       });
 
     const { newUser, refreshToken } = await sequelize.transaction(async (transaction) => {
-      const newUser: User = await User.create(
+      const newUser = await User.create(
         {
           email,
           username,
@@ -44,7 +44,7 @@ export default class AuthService {
         { transaction }
       );
 
-      const refreshToken: RefreshToken = await generateRefreshToken(newUser.id, transaction);
+      const refreshToken = await generateRefreshToken(newUser.id, transaction);
 
       return {
         newUser,
@@ -70,7 +70,7 @@ export default class AuthService {
   public static async loginUser(data: LoginUserData): Promise<AuthResult> {
     const { email, password } = data;
 
-    const user: User | null = await User.findOne({
+    const user = await User.findOne({
       where: { email },
       include: [{ association: "role" }],
     });
@@ -88,7 +88,7 @@ export default class AuthService {
 
       user.updateLastLogin({ transaction });
 
-      const refreshToken: RefreshToken = await generateRefreshToken(userId, transaction);
+      const refreshToken = await generateRefreshToken(userId, transaction);
       const accessToken = generateAccessToken(userId, userRole);
 
       return {
@@ -104,7 +104,7 @@ export default class AuthService {
    * @param {string} refreshToken - The refresh token to invalidate.
    */
   public static async logoutUser(refreshToken: string): Promise<void> {
-    const tokenRecord: RefreshToken | null = await RefreshToken.findOne({
+    const tokenRecord = await RefreshToken.findOne({
       where: { token: refreshToken },
     });
 
@@ -119,7 +119,7 @@ export default class AuthService {
    * @throws {CustomError} - If the token is invalid or the user is not found/active.
    */
   public static async refreshUserAccessToken(refreshToken: string): Promise<AuthResult> {
-    const tokenRecord: RefreshToken | null = await RefreshToken.findOne({ where: { token: refreshToken } });
+    const tokenRecord = await RefreshToken.findOne({ where: { token: refreshToken } });
 
     if (!tokenRecord || !tokenRecord.isValid()) {
       throw new CustomError({
@@ -131,7 +131,7 @@ export default class AuthService {
 
     const userId = tokenRecord.user_id;
 
-    const user: User | null = await User.findOne({
+    const user = await User.findOne({
       where: { id: userId },
       include: [{ association: "role" }],
     });

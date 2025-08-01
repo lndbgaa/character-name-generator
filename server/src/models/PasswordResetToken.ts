@@ -35,7 +35,7 @@ export default class PasswordResetToken extends Model {
   declare user?: User;
 
   public isValid(): boolean {
-    return this.status === "active" && dayjs().isBefore(this.expires_at) && !this.used_at;
+    return this.status === "active" && dayjs().isBefore(this.expires_at);
   }
 
   public async markAsUsed(options?: SaveOptions): Promise<void> {

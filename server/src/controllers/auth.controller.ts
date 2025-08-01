@@ -2,8 +2,8 @@ import ms from "ms";
 
 import config from "@/config/app.config.js";
 import AuthService from "@/services/auth.service.js";
+import PasswordResetService from "@/services/passwordReset.service.js";
 import catchAsync from "@/utils/catchAsync.js";
-
 import CustomError from "@/utils/CustomError.js";
 
 import type { LoginUserData, RegisterUserData } from "@/types/auth.d.ts";
@@ -125,4 +125,54 @@ export const refreshUserAccessToken = catchAsync(async (req: Request, res: Respo
     res.clearCookie("refreshToken", generateCookieOptions());
     throw err;
   }
+});
+
+/**
+ * Sends a password reset link to the user’s email address.
+ * - Extracts the email from the request body.
+ * - Calls PasswordResetService to generate a password reset token and send the email.
+ * - Always returns a generic success message to prevent email enumeration.
+ */
+export const requestPasswordReset = catchAsync(async (req: Request, res: Response): Promise<Response> => {
+  const { email } = req.body;
+
+  await PasswordResetService.sendPasswordResetLink(email);
+
+  return res.status(200).json({
+    success: true,
+    message: "If an account with this email exists, we have sent you a password reset link.",
+  });
+});
+
+/**
+ * Verifies if a password reset token is valid.
+ * - Extracts the token from the request body.
+ * - Calls PasswordResetService to check the token’s validity and expiration.
+ * - Returns HTTP 200 if the token is valid, otherwise throws an error.
+ */
+export const verifyPasswordResetToken = catchAsync(async (req: Request, res: Response): Promise<Response> => {
+  const { token } = req.body;
+
+  await PasswordResetService.verifyPasswordResetToken(token);
+
+  return res.sendStatus(200).json({
+    success: true,
+  });
+});
+
+/**
+ * Resets the user’s password using a valid reset token.
+ * - Extracts the reset token and the new password from the request body.
+ * - Calls PasswordResetService to validate the token and update the user’s password.
+ * - Returns HTTP 200 upon successful password reset.
+ */
+export const resetUserPassword = catchAsync(async (req: Request, res: Response): Promise<Response> => {
+  const { token, password } = req.body;
+
+  await PasswordResetService.resetUserPassword(token, password);
+
+  return res.status(200).json({
+    success: true,
+    message: "✅ Your password has been successfully reset.",
+  });
 });
