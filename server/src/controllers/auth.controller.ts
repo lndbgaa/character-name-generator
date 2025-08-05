@@ -6,7 +6,7 @@ import PasswordResetService from "@/services/passwordReset.service.js";
 import catchAsync from "@/utils/catchAsync.js";
 import CustomError from "@/utils/CustomError.js";
 
-import type { LoginUserData, RegisterUserData } from "@/types/auth.d.ts";
+import type { LoginUserData, RegisterUserData } from "@/types/auth.types";
 import type { CookieOptions, Request, Response } from "express";
 
 const { env, jwt } = config;
@@ -111,8 +111,9 @@ export const refreshUserAccessToken = catchAsync(async (req: Request, res: Respo
       });
     }
 
-    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-      await AuthService.refreshUserAccessToken(refreshToken);
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } = await AuthService.refreshUserAccessToken(
+      refreshToken
+    );
 
     res.cookie("refreshToken", newRefreshToken, generateCookieOptions());
 

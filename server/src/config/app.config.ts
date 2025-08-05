@@ -47,6 +47,11 @@ const config = {
     user: getEnvVar("GMAIL_USER"),
     pass: getEnvVar("GMAIL_PASSWORD"),
   },
+  cloudinary: {
+    name: getEnvVar("CLOUDINARY_CLOUD_NAME"),
+    key: getEnvVar("CLOUDINARY_API_KEY"),
+    secret: getEnvVar("CLOUDINARY_API_SECRET"),
+  },
 };
 
 export default config;

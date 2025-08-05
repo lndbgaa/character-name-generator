@@ -24,7 +24,7 @@ CREATE TABLE genders (
 
 CREATE TABLE names (
   id CHAR(36) NOT NULL PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
+  label VARCHAR(100) NOT NULL,
   type_id INT NOT NULL,
   gender_id INT NOT NULL,
   length ENUM("short", "medium", "long") NOT NULL,

@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import config from "@/config/app.config.js";
 import logger from "@/utils/logger.js";
 
-import type { ErrorDetails } from "@/types/error.d.ts";
+import type { ErrorDetails } from "@/types/error.types";
 
 interface LogErrorArgs {
   statusCode: number;

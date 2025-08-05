@@ -1,8 +1,12 @@
 import { DataTypes, Model } from "sequelize";
 
 import { sequelize } from "@/database/mysql.js";
+import CustomError from "@/utils/CustomError.js";
+import setIfChanged from "@/utils/setIfChanged.js";
 
 import type { Name, User } from "@/models/index.js";
+import type { FavoritePublicDTO } from "@/types/favorite.types.js";
+import type { SaveOptions } from "sequelize";
 
 /**
  * The "Favorite" entity represents a user's saved or bookmarked name.
@@ -31,6 +35,25 @@ export default class Favorite extends Model {
 
   declare user?: User;
   declare name?: Name;
+
+  public async updateNote(note: string, options?: SaveOptions): Promise<Favorite> {
+    if (setIfChanged(this, "note", note, true)) {
+      return await this.save({ ...options, fields: ["note"] });
+    } else {
+      throw new CustomError({
+        statusCode: 400,
+        message: "No changes detected.",
+      });
+    }
+  }
+
+  public toPublicDTO(): FavoritePublicDTO {
+    return {
+      id: this.id,
+      name: this.name?.label || "",
+      note: this.note,
+    };
+  }
 }
 
 Favorite.init(

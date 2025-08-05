@@ -12,12 +12,7 @@ import type { ErrorRequestHandler, NextFunction, Request, Response } from "expre
 const { env } = config;
 const isDev = env === "development";
 
-const errorHandler: ErrorRequestHandler = (
-  err: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+const errorHandler: ErrorRequestHandler = (err: Error, req: Request, res: Response, next: NextFunction): void => {
   if (err instanceof CustomError) {
     const { statusCode, statusText, message, debugMessage, code, details, stack } = err;
 
@@ -46,7 +41,7 @@ const errorHandler: ErrorRequestHandler = (
       message: "The request contains one or more invalid or missing fields.",
       ...(isDev && {
         errors: err.details.map((detail) => ({
-          field: Array.isArray(detail.path) ? detail.path.join(".") : "Unknown",
+          field: Array.isArray(detail.path) && detail.path.length > 0 ? detail.path.join(".") : "root",
           message: detail.message,
         })),
       }),

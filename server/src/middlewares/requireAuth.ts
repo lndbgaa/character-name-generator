@@ -6,7 +6,7 @@ import type { NextFunction, Request, Response } from "express";
 
 const { accessSecret } = config.jwt;
 
-const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
+const requireAuth = (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
 

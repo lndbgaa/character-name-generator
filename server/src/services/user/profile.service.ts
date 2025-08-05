@@ -1,0 +1,71 @@
+import { User } from "@/models/index.js";
+import AuthService from "@/services//auth.service.js";
+import UploadService from "@/services/upload.service.js";
+import CustomError from "@/utils/CustomError.js";
+
+import type { UpdateUserData } from "@/types/user.types";
+import { type FindOptions } from "sequelize";
+
+class ProfileService {
+  /**
+   *
+   * @param {string} userId - The unique ID of the user to retrieve.
+   * @param {FindOptions} [options] - Optional Sequelize query options (e.g., include associations).
+   * @returns {Promise<User>} The found user instance.
+   * @throws {CustomError} If no user is found with the provided ID.
+   */
+  public static async findUserById(userId: string, options?: FindOptions): Promise<User> {
+    const user = await User.findOne({
+      where: { id: userId },
+      ...options,
+    });
+
+    if (!user) {
+      throw new CustomError({
+        statusCode: 404,
+        message: "No user found with the provided id.",
+        details: { userId },
+      });
+    }
+
+    return user;
+  }
+
+  /**
+   * Updates the profile details of a user.
+   *
+   * @param {string} userId - The unique ID of the user to update.
+   * @param {UpdateUserData} data - The new profile data to apply to the user.
+   * @returns {Promise<User>} The updated user instance.
+   * @throws {CustomError} If the user is not found or if the username is changed and already taken.
+   */
+  public static async updateProfile(userId: string, data: UpdateUserData): Promise<User> {
+    const user = await this.findUserById(userId, { include: [{ association: "role" }] });
+
+    if (data.username && data.username !== user.username) {
+      await AuthService.assertUsernameIsUnique(data.username);
+    }
+
+    return user.updateProfile(data);
+  }
+
+  /**
+   * Updates a user's avatar image.
+   *
+   * @param {string} userId - The unique ID of the user whose avatar is being updated.
+   * @param {Express.Multer.File} file - The uploaded image file to set as the avatar.
+   * @returns {Promise<{ url: string }>} The URL of the newly uploaded avatar image.
+   * @throws {CustomError} If the user is not found.
+   */
+  public static async updateAvatar(userId: string, file: Express.Multer.File): Promise<{ url: string }> {
+    const user = await this.findUserById(userId);
+
+    const { secure_url: url } = await UploadService.uploadImage(file, `charnamegen/users/${userId}/profile-picture`);
+
+    await user.updateAvatar(url);
+
+    return { url };
+  }
+}
+
+export default ProfileService;

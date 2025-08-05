@@ -3,9 +3,29 @@ import { RefreshToken, User } from "@/models/index.js";
 import CustomError from "@/utils/CustomError.js";
 import { generateAccessToken, generateRefreshToken } from "@/utils/authToken.utils";
 
-import type { AuthResult, LoginUserData, RegisterUserData } from "@/types/auth.d.ts";
+import type { AuthResult, LoginUserData, RegisterUserData } from "@/types/auth.types";
 
 export default class AuthService {
+  public static async assertEmailIsUnique(email: string) {
+    const doesEmailExists = !!(await User.findOne({ where: { email } }));
+
+    if (doesEmailExists)
+      throw new CustomError({
+        statusCode: 409,
+        message: "An account with this email already exists.",
+      });
+  }
+
+  public static async assertUsernameIsUnique(username: string) {
+    const doesUsernameExists = !!(await User.findOne({ where: { username } }));
+
+    if (doesUsernameExists)
+      throw new CustomError({
+        statusCode: 409,
+        message: "This username is already taken.",
+      });
+  }
+
   /**
    * Registers a new user and issues authentication tokens.
 
@@ -16,21 +36,8 @@ export default class AuthService {
   public static async registerUser(data: RegisterUserData): Promise<AuthResult> {
     const { email, username, password, firstName, lastName } = data;
 
-    const doesEmailExists = !!(await User.findOne({ where: { email } }));
-
-    if (doesEmailExists)
-      throw new CustomError({
-        statusCode: 409,
-        message: "An account with this email already exists.",
-      });
-
-    const doesUsernameExists = !!(await User.findOne({ where: { username } }));
-
-    if (doesUsernameExists)
-      throw new CustomError({
-        statusCode: 409,
-        message: "This username is already taken.",
-      });
+    await this.assertEmailIsUnique(email);
+    await this.assertUsernameIsUnique(username);
 
     const { newUser, refreshToken } = await sequelize.transaction(async (transaction) => {
       const newUser = await User.create(

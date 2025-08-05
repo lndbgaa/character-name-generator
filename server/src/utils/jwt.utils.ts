@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 
 import CustomError from "@/utils/CustomError.js";
 
-import type { CustomJwtPayload } from "@/types/auth.js";
+import type { CustomJwtPayload } from "@/types/auth.types.js";
 import type { StringValue } from "ms";
 
 export function generateJwt(payload: CustomJwtPayload, secret: string, expiresIn: StringValue | number) {

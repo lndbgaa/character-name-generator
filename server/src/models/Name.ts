@@ -18,7 +18,7 @@ type NameLength = "long" | "medium" | "short";
  *
  *  Fields :
  * - `id`: UUID identifier
- * - `name`: the actual character name (e.g., "Thalor", "Xenara")
+ * - `label`: the actual character name (e.g., "Thalor", "Xenara")
  * - `type_id`: foreign key linking to the "Type" model
  * - `gender_id`: foreign key linking to the "Gender" model
  * - `length`: enum defining name size ("short", "medium", "long")
@@ -27,7 +27,7 @@ type NameLength = "long" | "medium" | "short";
  */
 export default class Name extends Model {
   declare id: string;
-  declare name: string;
+  declare label: string;
   declare type_id: number;
   declare gender_id: number;
   declare length: NameLength;
@@ -45,7 +45,7 @@ Name.init(
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4,
     },
-    name: {
+    label: {
       type: DataTypes.STRING(100),
       allowNull: false,
     },
@@ -75,9 +75,9 @@ Name.init(
     updatedAt: "updated_at",
     indexes: [
       {
-        name: "uniq_names_name_type",
+        name: "uniq_names_label_type",
         unique: true,
-        fields: ["name", "type_id"],
+        fields: ["label", "type_id"],
       },
       {
         name: "idx_names_type",

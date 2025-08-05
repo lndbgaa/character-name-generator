@@ -2,7 +2,7 @@ import { getReasonPhrase } from "http-status-codes";
 
 import { GENERIC_ERROR_MESSAGE } from "@/constants/index.js";
 
-import type { ErrorDetails } from "@/types/error.d.ts";
+import type { ErrorDetails } from "@/types/error.types";
 
 class CustomError extends Error {
   public readonly statusCode: number;

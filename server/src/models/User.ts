@@ -3,12 +3,20 @@ import dayjs from "dayjs";
 import { DataTypes, Model } from "sequelize";
 
 import { sequelize } from "@/database/mysql.js";
+import CustomError from "@/utils/CustomError.js";
+import { toDateOnly, toTimeOnly } from "@/utils/date.utils.js";
+import setIfChanged from "@/utils/setIfChanged.js";
 import { nameRegex, passwordRegex, usernameRegex } from "@/validators/patterns.js";
 
 import type { Role } from "@/models/index.js";
+import type {
+  AdminUserDTO,
+  PrivateUserDTO,
+  PublicUserDTO,
+  UpdateUserData,
+  UserAccountStatus,
+} from "@/types/user.types";
 import type { SaveOptions } from "sequelize";
-
-type UserAccountStatus = "active" | "suspended" | "deleted";
 
 /**
  * The "User" entity represents a registered user of the application.
@@ -61,6 +69,29 @@ export default class User extends Model {
     await this.save(options);
   }
 
+  public async updateAvatar(url: string, options?: SaveOptions): Promise<void> {
+    this.avatar_url = url;
+    await this.save(options);
+  }
+
+  public async updateProfile(data: UpdateUserData, options?: SaveOptions): Promise<User> {
+    const updatedFields: string[] = [];
+
+    if (setIfChanged(this, "username", data.username, false)) updatedFields.push("username");
+    if (setIfChanged(this, "first_name", data.firstName, false)) updatedFields.push("first_name");
+    if (setIfChanged(this, "last_name", data.lastName, false)) updatedFields.push("last_name");
+    if (setIfChanged(this, "password", data.password, false)) updatedFields.push("password");
+
+    if (updatedFields.length === 0) {
+      throw new CustomError({
+        statusCode: 400,
+        message: "No changes detected.",
+      });
+    }
+
+    return await this.save({ ...options, fields: updatedFields });
+  }
+
   public async suspend(options?: SaveOptions): Promise<void> {
     if (this.status === "active") {
       this.status = "suspended";
@@ -96,6 +127,39 @@ export default class User extends Model {
 
   public isDeleted(): boolean {
     return this.status === "deleted";
+  }
+
+  public toPublicDTO(): PublicUserDTO {
+    return {
+      id: this.id,
+      username: this.username,
+      avatarUrl: this.avatar_url,
+      createdAt: {
+        date: toDateOnly(this.created_at),
+        time: toTimeOnly(this.created_at),
+      },
+    };
+  }
+
+  public toPrivateDTO(): PrivateUserDTO {
+    return {
+      ...this.toPublicDTO(),
+      role: this.role?.label || "user",
+      firstName: this.first_name,
+      lastName: this.last_name,
+      lastLogin: {
+        date: toDateOnly(this.last_login),
+        time: toTimeOnly(this.last_login),
+      },
+    };
+  }
+
+  public toAdminDTO(): AdminUserDTO {
+    return {
+      ...this.toPrivateDTO(),
+      email: this.email,
+      status: this.status,
+    };
   }
 }
 
