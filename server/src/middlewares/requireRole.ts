@@ -9,7 +9,7 @@ const requireRole = (allowedRoles: string[]) => {
     if (!allowedRoles.includes(userRole)) {
       return next(
         new CustomError({
-          statusCode: 401,
+          statusCode: 403,
           message: "You are not allowed to access this resource.",
           debugMessage: `User role "${userRole}" is not in allowed roles: [${allowedRoles.join(", ")}].`,
           details: {

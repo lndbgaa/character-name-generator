@@ -6,20 +6,24 @@ import { generateAccessToken, generateRefreshToken } from "@/utils/authToken.uti
 import type { AuthResult, LoginUserData, RegisterUserData } from "@/types/auth.types";
 
 export default class AuthService {
-  public static async assertEmailIsUnique(email: string) {
-    const doesEmailExists = !!(await User.findOne({ where: { email } }));
+  public static async assertEmailIsUnique(email: string): Promise<void> {
+    const cleanEmail = email.trim().toLowerCase();
 
-    if (doesEmailExists)
+    const exists = await User.findOne({ where: { email: cleanEmail } });
+
+    if (exists)
       throw new CustomError({
         statusCode: 409,
         message: "An account with this email already exists.",
       });
   }
 
-  public static async assertUsernameIsUnique(username: string) {
-    const doesUsernameExists = !!(await User.findOne({ where: { username } }));
+  public static async assertUsernameIsUnique(username: string): Promise<void> {
+    const cleanUsername = username.trim().toLowerCase();
 
-    if (doesUsernameExists)
+    const exists = await User.findOne({ where: { username: cleanUsername } });
+
+    if (exists)
       throw new CustomError({
         statusCode: 409,
         message: "This username is already taken.",

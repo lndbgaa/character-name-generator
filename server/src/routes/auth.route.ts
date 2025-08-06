@@ -8,7 +8,7 @@ import {
   registerSchema,
   requestPasswordResetSchema,
   verifyPasswordResetSchema,
-} from "@/validators/auth.validator.js";
+} from "@/validators/auth.schema.js";
 
 import {
   loginUser,
