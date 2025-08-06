@@ -6,6 +6,10 @@ import { generateAccessToken, generateRefreshToken } from "@/utils/authToken.uti
 import type { AuthResult, LoginUserData, RegisterUserData } from "@/types/auth.types";
 
 export default class AuthService {
+  /**
+   *
+   * @param email
+   */
   public static async assertEmailIsUnique(email: string): Promise<void> {
     const cleanEmail = email.trim().toLowerCase();
 
@@ -18,6 +22,10 @@ export default class AuthService {
       });
   }
 
+  /**
+   *
+   * @param username
+   */
   public static async assertUsernameIsUnique(username: string): Promise<void> {
     const cleanUsername = username.trim().toLowerCase();
 

@@ -4,7 +4,7 @@ import { sequelize } from "@/database/mysql.js";
 import CustomError from "@/utils/CustomError.js";
 import setIfChanged from "@/utils/setIfChanged.js";
 
-import type { UpdateUniverseData } from "@/types/universe.types.js";
+import type { UpdateUniverseData } from "@/types/universes.types.js";
 import type { SaveOptions } from "sequelize";
 
 export const LABEL_MAX = 50;

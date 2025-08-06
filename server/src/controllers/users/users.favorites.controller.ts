@@ -1,8 +1,8 @@
-import FavoriteService from "@/services/user/favorites.service.js";
+import FavoriteService from "@/services/users/users.favorites.service.js";
 import catchAsync from "@/utils/catchAsync.js";
 import parsePagination from "@/utils/parsePagination.js";
 
-import type { AddFavoriteData, UpdateFavoriteData } from "@/types/favorite.types.js";
+import type { AddFavoriteData, UpdateFavoriteData } from "@/types/users/users.favorites.types.js";
 import type { Request, Response } from "express";
 
 /**

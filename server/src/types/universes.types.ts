@@ -1,7 +1,7 @@
 export interface CreateUniverseData {
   label: string;
   displayName: string;
-  description: string;
+  description?: string;
 }
 
 export interface UpdateUniverseData {

@@ -5,7 +5,7 @@ import CustomError from "@/utils/CustomError.js";
 import setIfChanged from "@/utils/setIfChanged.js";
 
 import type { Name, User } from "@/models/index.js";
-import type { FavoritePublicDTO } from "@/types/favorite.types.js";
+import type { FavoritePublicDTO } from "@/types/users/users.favorites.types.js";
 import type { SaveOptions } from "sequelize";
 
 /**

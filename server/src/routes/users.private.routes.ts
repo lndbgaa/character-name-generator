@@ -13,8 +13,8 @@ import {
   getMyFavorites,
   removeFavorite,
   updateFavorite,
-} from "@/controllers/user/favorites.controller.js";
-import { getMyInfo, updateMyAvatar, updateMyProfile } from "@/controllers/user/profile.controller.js";
+} from "@/controllers/users/users.favorites.controller.js";
+import { getMyInfo, updateMyAvatar, updateMyProfile } from "@/controllers/users/users.profile.controller.js";
 
 const router = Router();
 

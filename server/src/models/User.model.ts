@@ -15,7 +15,7 @@ import type {
   PublicUserDTO,
   UpdateUserData,
   UserAccountStatus,
-} from "@/types/user.types";
+} from "@/types/users/users.types";
 import type { SaveOptions } from "sequelize";
 
 /**

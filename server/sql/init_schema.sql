@@ -32,7 +32,7 @@ CREATE TABLE names (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (type_id) REFERENCES types(id) ON DELETE RESTRICT,
   FOREIGN KEY (gender_id) REFERENCES genders(id) ON DELETE RESTRICT,
-  CONSTRAINT uniq_names_name_type UNIQUE (name, type_id),
+  CONSTRAINT uniq_names_label_type UNIQUE (label, type_id),
   INDEX idx_names_type (type_id),
   INDEX idx_names_type_gender (type_id, gender_id)
 );

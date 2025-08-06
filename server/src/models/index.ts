@@ -1,12 +1,12 @@
-import Favorite from "@/models/Favorite.js";
-import Gender from "@/models/Gender.js";
-import Name from "@/models/Name.js";
-import PasswordResetToken from "@/models/PasswordResetToken.js";
-import RefreshToken from "@/models/RefreshToken.js";
-import Role from "@/models/Role.js";
-import Type from "@/models/Type.js";
-import Universe from "@/models/Universe.js";
-import User from "@/models/User.js";
+import Favorite from "@/models/Favorite.model.js";
+import Gender from "@/models/Gender.model.js";
+import Name from "@/models/Name.model.js";
+import PasswordResetToken from "@/models/PasswordResetToken.model.js";
+import RefreshToken from "@/models/RefreshToken.model.js";
+import Role from "@/models/Role.model.js";
+import Type from "@/models/Type.model.js";
+import Universe from "@/models/Universe.model.js";
+import User from "@/models/User.model.js";
 
 Universe.hasMany(Type, { foreignKey: "universe_id", as: "types" });
 Type.belongsTo(Universe, { foreignKey: "universe_id", as: "universe" });

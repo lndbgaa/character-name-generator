@@ -13,7 +13,7 @@ import {
   getUniverse,
   getUniverses,
   updateUniverse,
-} from "@/controllers/universe.controller.js";
+} from "@/controllers/universes.controller.js";
 
 const router = Router();
 

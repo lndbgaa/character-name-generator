@@ -1,12 +1,12 @@
 import ms from "ms";
 
 import config from "@/config/app.config.js";
-import AuthService from "@/services/auth.service.js";
-import PasswordResetService from "@/services/passwordReset.service.js";
+import AuthService from "@/services/auth/auth.service.js";
+import PasswordResetService from "@/services/auth/password-reset.service.js";
 import catchAsync from "@/utils/catchAsync.js";
 import CustomError from "@/utils/CustomError.js";
 
-import type { LoginUserData, RegisterUserData } from "@/types/auth.types";
+import type { LoginUserData, RegisterUserData } from "@/types/auth.types.js";
 import type { CookieOptions, Request, Response } from "express";
 
 const { env, jwt } = config;

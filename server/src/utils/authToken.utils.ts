@@ -44,10 +44,7 @@ export function generateRefreshToken(userId: string, transaction?: Transaction):
  * @param userId
  * @returns
  */
-export function generateResetPasswordToken(
-  userId: string,
-  transaction?: Transaction
-): Promise<PasswordResetToken> {
+export function generateResetPasswordToken(userId: string, transaction?: Transaction): Promise<PasswordResetToken> {
   const now = dayjs();
 
   return PasswordResetToken.create(

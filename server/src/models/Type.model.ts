@@ -1,8 +1,17 @@
 import { DataTypes, Model } from "sequelize";
 
 import { sequelize } from "@/database/mysql.js";
+import CustomError from "@/utils/CustomError.js";
+import setIfChanged from "@/utils/setIfChanged.js";
 
 import type { Universe } from "@/models/index.js";
+import type { UpdateTypeData } from "@/types/types.types.js";
+import type { SaveOptions } from "sequelize";
+
+export const LABEL_MAX = 50;
+export const DISPLAY_NAME_MAX = 100;
+export const DESCRIPTION_MAX = 500;
+export const ICON_URL_MAX = 255;
 
 /**
  * The "Type" entity represents a category or classification of names
@@ -30,6 +39,37 @@ export default class Type extends Model {
   declare universe_id: number;
 
   declare universe?: Universe;
+
+  public async updateInfo(data: UpdateTypeData, options?: SaveOptions): Promise<Type> {
+    const updatedFields: string[] = [];
+
+    if (setIfChanged(this, "universe_id", data.universeId, false)) updatedFields.push("universe_id");
+    if (setIfChanged(this, "display_name", data.displayName, false)) updatedFields.push("display_name");
+    if (setIfChanged(this, "description", data.description, true)) updatedFields.push("description");
+    if (setIfChanged(this, "icon_url", data.iconUrl, true)) updatedFields.push("icon_url");
+
+    if (updatedFields.length === 0) {
+      throw new CustomError({
+        statusCode: 400,
+        message: "No changes detected.",
+      });
+    }
+
+    await this.save({ ...options, fields: updatedFields });
+
+    return await this.reload({ include: [{ association: "universe" }] });
+  }
+
+  public toAdminDTO() {
+    return {
+      id: this.id,
+      label: this.label,
+      displayName: this.display_name,
+      description: this.description,
+      iconUrl: this.icon_url,
+      universe: this.universe,
+    };
+  }
 }
 
 Type.init(
@@ -40,12 +80,12 @@ Type.init(
       autoIncrement: true,
     },
     label: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.STRING(LABEL_MAX),
       allowNull: false,
       unique: true,
     },
     display_name: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(DISPLAY_NAME_MAX),
       allowNull: false,
     },
     description: {
@@ -53,7 +93,7 @@ Type.init(
       allowNull: true,
     },
     icon_url: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.STRING(ICON_URL_MAX),
       allowNull: true,
     },
     universe_id: {

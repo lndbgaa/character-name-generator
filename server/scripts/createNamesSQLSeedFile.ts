@@ -64,7 +64,7 @@ function getTypeFromFileName(filePath: string) {
 function generateSeedSQL() {
   const files = getAllJsonFiles(inputDir);
 
-  let inserts = [`INSERT INTO names (id, name, type_id, gender_id, length) VALUES`];
+  let inserts = [`INSERT INTO names (id, label, type_id, gender_id, length) VALUES`];
 
   const validGenders = ["male", "female", "neutral"];
 
@@ -84,12 +84,7 @@ function generateSeedSQL() {
     const entries = JSON.parse(raw);
 
     for (const { name, gender } of entries) {
-      if (
-        typeof name !== "string" ||
-        typeof gender !== "string" ||
-        name.trim() === "" ||
-        gender.trim() === ""
-      ) {
+      if (typeof name !== "string" || typeof gender !== "string" || name.trim() === "" || gender.trim() === "") {
         continue;
       }
 
@@ -97,11 +92,11 @@ function generateSeedSQL() {
       if (!validGenders.includes(genderLower)) continue;
 
       const id = uuid();
-      const safeName = name.replace(/'/g, "''");
+      const safeLabel = name.replace(/'/g, "''");
       const genderId = genderMap[genderLower as GenreKey];
-      const length = safeName.length >= 9 ? "long" : safeName.length >= 6 ? "medium" : "short";
+      const length = safeLabel.length >= 9 ? "long" : safeLabel.length >= 6 ? "medium" : "short";
 
-      inserts.push(`  ('${id}', '${safeName}', ${typeId}, ${genderId}, '${length}'),`);
+      inserts.push(`  ('${id}', '${safeLabel}', ${typeId}, ${genderId}, '${length}'),`);
     }
   }
 

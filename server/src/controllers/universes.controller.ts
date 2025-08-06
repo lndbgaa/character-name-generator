@@ -1,7 +1,7 @@
-import UniverseService from "@/services/universe.service.js";
+import UniverseService from "@/services/universes.service.js";
 import catchAsync from "@/utils/catchAsync.js";
 
-import type { CreateUniverseData, UpdateUniverseData } from "@/types/universe.types.js";
+import type { CreateUniverseData, UpdateUniverseData } from "@/types/universes.types.js";
 import type { Request, Response } from "express";
 
 /**

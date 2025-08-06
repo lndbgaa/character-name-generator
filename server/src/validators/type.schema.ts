@@ -1,9 +1,17 @@
 import Joi from "joi";
 
-import { DESCRIPTION_MAX, DISPLAY_NAME_MAX, LABEL_MAX } from "@/models/Universe.model.js";
+import { DESCRIPTION_MAX, DISPLAY_NAME_MAX, ICON_URL_MAX, LABEL_MAX } from "@/models/Type.model.js";
 import { labelRegex } from "@/validators/patterns.js";
 
-export const createUniverseSchema = Joi.object({
+const universeIdSchema = Joi.number().integer().positive().required().messages({
+  "any.required": "The universe ID is required.",
+  "number.base": "The universe ID must be a number.",
+  "number.integer": "The universe ID must be an integer.",
+  "number.positive": "The universe ID must be a positive number.",
+});
+
+export const createTypeSchema = Joi.object({
+  universeId: universeIdSchema,
   label: Joi.string()
     .trim()
     .max(LABEL_MAX)
@@ -35,9 +43,19 @@ export const createUniverseSchema = Joi.object({
       "string.empty": "The description cannot be empty if provided.",
       "string.max": `The description must not exceed ${DESCRIPTION_MAX} characters.`,
     }),
+  iconUrl: Joi.string()
+    .trim()
+    .max(ICON_URL_MAX)
+    .optional()
+    .messages({
+      "string.base": "The icon URL must be a string.",
+      "string.empty": "The icon URL cannot be empty if provided.",
+      "string.max": `The icon URL must not exceed ${ICON_URL_MAX} characters.`,
+    }),
 });
 
-export const updateUniverseSchema = Joi.object({
+export const updateTypeSchema = Joi.object({
+  universeId: universeIdSchema.optional(),
   displayName: Joi.string()
     .trim()
     .max(DISPLAY_NAME_MAX)
@@ -56,4 +74,16 @@ export const updateUniverseSchema = Joi.object({
       "string.base": "The description must be a string.",
       "string.max": `The description must not exceed ${DESCRIPTION_MAX} characters.`,
     }),
+  iconUrl: Joi.string()
+    .trim()
+    .allow("")
+    .optional()
+    .messages({
+      "string.base": "The icon URL must be a string.",
+      "string.max": `The icon URL must not exceed ${ICON_URL_MAX} characters.`,
+    }),
+});
+
+export const getAllTypesSchema = Joi.object({
+  universeId: universeIdSchema.optional(),
 });

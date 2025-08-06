@@ -1,7 +1,8 @@
 import { Universe } from "@/models/index.js";
 import CustomError from "@/utils/CustomError.js";
 
-import type { CreateUniverseData, UpdateUniverseData } from "@/types/universe.types.js";
+import type { CreateUniverseData, UpdateUniverseData } from "@/types/universes.types.js";
+import type { FindOptions } from "sequelize";
 
 class UniverseService {
   /**
@@ -25,23 +26,15 @@ class UniverseService {
   }
 
   /**
-   * Retrieves all universes from the database.
-   *
-   * @returns {Promise<Universe[]>} - An array of Universe instances.
-   */
-  public static async findAllUniverses(): Promise<Universe[]> {
-    return Universe.findAll();
-  }
-
-  /**
    * Retrieves a universe by its numeric ID.
    *
    * @param {number} id - The unique ID of the universe to retrieve.
+   * @param {FindOptions} [options] - Additional Sequelize find options (e.g., includes).
    * @returns {Promise<Universe>} - The found universe instance.
    * @throws {CustomError} - If no universe is found with the provided ID (404 Not Found).
    */
-  public static async findUniverseById(id: number): Promise<Universe> {
-    const universe = await Universe.findByPk(id);
+  public static async findUniverseById(id: number, options?: FindOptions): Promise<Universe> {
+    const universe = await Universe.findByPk(id, options);
 
     if (!universe) {
       throw new CustomError({
@@ -52,6 +45,15 @@ class UniverseService {
     }
 
     return universe;
+  }
+
+  /**
+   * Retrieves all universes from the database.
+   *
+   * @returns {Promise<Universe[]>} - An array of Universe instances.
+   */
+  public static async findAllUniverses(): Promise<Universe[]> {
+    return Universe.findAll();
   }
 
   /**

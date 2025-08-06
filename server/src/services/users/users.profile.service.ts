@@ -1,16 +1,16 @@
 import { User } from "@/models/index.js";
-import AuthService from "@/services//auth.service.js";
+import AuthService from "@/services/auth/auth.service.js";
 import UploadService from "@/services/upload.service.js";
 import CustomError from "@/utils/CustomError.js";
 
-import type { UpdateUserData } from "@/types/user.types";
+import type { UpdateUserData } from "@/types/users/users.types";
 import { type FindOptions } from "sequelize";
 
 class ProfileService {
   /**
    *
    * @param {string} userId - The unique ID of the user to retrieve.
-   * @param {FindOptions} [options] - Optional Sequelize query options (e.g., include associations).
+   * @param {FindOptions} [options] - Additional Sequelize find options (e.g., includes).
    * @returns {Promise<User>} The found user instance.
    * @throws {CustomError} If no user is found with the provided ID.
    */

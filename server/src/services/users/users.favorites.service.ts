@@ -1,8 +1,8 @@
 import { Favorite, Name } from "@/models/index.js";
-import ProfileService from "@/services/user/profile.service.js";
+import ProfileService from "@/services/users/users.profile.service.js";
 import CustomError from "@/utils/CustomError.js";
 
-import type { AddFavoriteData, UpdateFavoriteData } from "@/types/favorite.types.js";
+import type { AddFavoriteData, UpdateFavoriteData } from "@/types/users/users.favorites.types.js";
 
 class FavoriteService {
   /**
