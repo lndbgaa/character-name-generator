@@ -1,4 +1,4 @@
-import { col, fn, Op, where as whereFn } from "sequelize";
+import { col, fn, Op, Sequelize, where as whereFn } from "sequelize";
 
 import { Favorite, Name } from "@/models/index.js";
 import GenderService from "@/services/genders.service.js";
@@ -6,9 +6,15 @@ import TypeService from "@/services/types.service.js";
 import CustomError from "@/utils/CustomError.js";
 import { createNameSchema } from "@/validators/name.schema.js";
 
-import type { BulkNameResult, CreateNameData, NameFilters, UpdateNameData } from "@/types/names.types.js";
+import type {
+  BulkNameResult,
+  CreateNameData,
+  GenerateNameFilters,
+  GetNameFilters,
+  UpdateNameData,
+} from "@/types/names.types.js";
 import type { FlexibleWhere } from "@/types/sequelize.types.js";
-import type { FindOptions } from "sequelize";
+import type { FindOptions, WhereOptions } from "sequelize";
 
 class NameService {
   /**
@@ -17,10 +23,19 @@ class NameService {
    * @param {string} id - The unique ID of the name to retrieve.
    * @param {FindOptions} [options] - Additional Sequelize find options (e.g., includes).
    * @returns {Promise<Name>} The found `Name` instance.
-   * @throws {CustomError} If no name is found with the provided ID.
+   * @throws {CustomError} If:
+   *   - No name is found with the provided ID.
    */
   public static async findNameById(id: string, options?: FindOptions): Promise<Name> {
-    const name = await Name.findByPk(id, options);
+    const mergedWhere: WhereOptions = {
+      ...(options?.where ?? {}),
+      id,
+    };
+
+    const name = await Name.findOne({
+      ...options,
+      where: mergedWhere,
+    });
 
     if (!name) {
       throw new CustomError({
@@ -47,12 +62,13 @@ class NameService {
    * @returns {Promise<{ count: number; names: Name[] }>} An object containing:
    *   - `count`: Total number of matching names.
    *   - `names`: Array of matching `Name` instances.
-   * @throws {CustomError} If provided `typeId` or `genderId` do not exist.
+   * @throws {CustomError} If:
+   *   - Provided `typeId` or `genderId` do not exist (404 Not Found)
    */
   public static async getNames(
     limit: number,
     offset: number,
-    filters?: NameFilters
+    filters?: GetNameFilters
   ): Promise<{ count: number; names: Name[] }> {
     let where: FlexibleWhere<Name> = {};
 
@@ -60,7 +76,10 @@ class NameService {
       const { search, typeId, genderId, length, charLength, status } = filters;
 
       if (search) {
-        where.value = { [Op.like]: `${search.toLowerCase()}%` };
+        where[Op.and] = [
+          ...(where[Op.and] ?? []),
+          Sequelize.where(fn("LOWER", col("value")), { [Op.like]: `${search.toLowerCase()}%` }),
+        ];
       }
 
       if (typeId) {
@@ -78,10 +97,7 @@ class NameService {
       }
 
       if (charLength) {
-        where[Op.and] = [
-          ...(where[Op.and] ?? []),
-          whereFn(fn("CHAR_LENGTH", col("value")), { [Op.eq]: charLength }),
-        ];
+        where[Op.and] = [...(where[Op.and] ?? []), whereFn(fn("CHAR_LENGTH", col("value")), { [Op.eq]: charLength })];
       }
 
       if (status) {
@@ -105,7 +121,7 @@ class NameService {
    * @param {CreateNameData} data - The data required to create the name.
    * @returns {Promise<Name>} The newly created `Name` instance.
    * @throws {CustomError} If:
-   *   - `typeId` or `genderId` do not exist (404 Not Found).
+   *   - Provided `typeId` or `genderId` do not exist (404 Not Found).
    *   - A name with the same value and type already exists (409 Conflict).
    */
   public static async createName(data: CreateNameData): Promise<Name> {
@@ -253,6 +269,60 @@ class NameService {
   }
 
   /**
+   * Generates a random set of active names for a given type.
+   *
+   * Only names with status `"active"` are eligible.
+   *
+   * @param {number} typeId - The ID of the type to scope the random draw.
+   * @param {number} limit - The maximum number of names to return.
+   * @param {GenerateNameFilters} [filters] - Optional filters to apply:
+   *   - `genderId` : Filter by associated gender ID.
+   *   - `length`: Filter by name length category (`short`, `medium`, `long`).
+   *   - `charLength`: Filter by the exact number of characters in the name value.
+   * @returns {Promise<Name[]>} An array of randomly selected `Name` instances.
+   * @throws {CustomError} If:
+   *   - Provided `typeId` or `genderId` do not exist (404 Not Found).
+   */
+  public static async generateRandomNamesFromType(
+    typeId: number,
+    limit: number,
+    filters?: GenerateNameFilters
+  ): Promise<Name[]> {
+    await TypeService.findTypeById(typeId);
+
+    let where: FlexibleWhere<Name> = {
+      type_id: typeId,
+      status: "active",
+    };
+
+    if (filters) {
+      const { genderId, length, charLength } = filters;
+
+      if (genderId) {
+        await GenderService.findGenderById(genderId);
+        where.gender_id = genderId;
+      }
+
+      if (length) {
+        where.length = length;
+      }
+
+      if (charLength) {
+        where[Op.and] = [...(where[Op.and] ?? []), whereFn(fn("CHAR_LENGTH", col("value")), { [Op.eq]: charLength })];
+      }
+    }
+
+    const names = await Name.findAll({
+      where,
+      order: [Sequelize.literal("RAND()")],
+      include: [{ association: "type" }, { association: "gender" }],
+      limit,
+    });
+
+    return names;
+  }
+
+  /**
    * Updates an existing name.
    *
    * @param {string} id - The unique ID of the name to update.
@@ -260,7 +330,7 @@ class NameService {
    * @returns {Promise<Name>} The updated name instance.
    * @throws {CustomError} If:
    *   - The name is archived (422 Unprocessable Entity).
-   *   - `typeId` or `genderId` do not exist (404 Not Found).
+   *   - Provided `typeId` or `genderId` do not exist (404 Not Found).
    *   - The name has favorites and `value` is changed (403 Forbidden).
    *   - Another name with the same value and type already exists (409 Conflict).
    */
