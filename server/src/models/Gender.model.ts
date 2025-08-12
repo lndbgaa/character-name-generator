@@ -13,7 +13,7 @@ import { sequelize } from "@/database/mysql.js";
  * - `display_name`: the user-facing label (e.g., "Male", "Female", "Neutral")
  */
 export default class Gender extends Model {
-  declare id: string;
+  declare id: number;
   declare label: string;
   declare display_name: string;
 }

@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import multerUploads from "@/middlewares/multerUploads.js";
+import imageUpload from "@/middlewares/imageUpload.js";
 import requireAuth from "@/middlewares/requireAuth.js";
 import validate from "@/middlewares/validateAll.js";
 
@@ -23,7 +23,7 @@ router.use(requireAuth);
 // Profile
 router.get("/", getMyInfo);
 router.patch("/", validate(updateProfileSchema), updateMyProfile);
-router.patch("/avatar", multerUploads, updateMyAvatar);
+router.patch("/avatar", imageUpload, updateMyAvatar);
 
 // Favorites
 router.get("/favorites", getMyFavorites);

@@ -1,0 +1,31 @@
+[
+  {
+    "value": "Testa",
+    "typeId": "aaa",
+    "genderId": 1
+  },
+  {
+    "value": "Testu",
+    "typeId": 1,
+    "genderId": 1
+  },
+  {
+    "value": "Testo",
+    "typeId": 100,
+    "genderId": 100
+  },
+  {
+    "value": "Teste",
+    "typeId": 1,
+    "genderId": 1
+  },
+  {
+    "value": "Teste",
+    "typeId": 1,
+    "genderId": 1
+  },
+  {
+    "typeId": 1,
+    "genderId": 1
+  }
+]

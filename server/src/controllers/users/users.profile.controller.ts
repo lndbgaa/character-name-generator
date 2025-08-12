@@ -1,8 +1,9 @@
 import ProfileService from "@/services/users/users.profile.service.js";
+import UserService from "@/services/users/users.service.js";
 import catchAsync from "@/utils/catchAsync.js";
 import CustomError from "@/utils/CustomError.js";
 
-import type { MulterRequest } from "@/types/express.d.ts";
+import type { MulterRequest } from "@/types/config.types.js";
 import type { UpdateUserData } from "@/types/users/users.types";
 import type { Request, Response } from "express";
 
@@ -12,7 +13,7 @@ import type { Request, Response } from "express";
 export const getMyInfo = catchAsync(async (req: Request, res: Response): Promise<Response> => {
   const userId = req.user!.id;
 
-  const user = await ProfileService.findUserById(userId, { include: [{ association: "role" }] });
+  const user = await UserService.findUserById(userId, { include: [{ association: "role" }] });
 
   return res.status(200).json({
     success: true,

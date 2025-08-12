@@ -1,19 +1,31 @@
 CREATE TABLE universes (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   label VARCHAR(50) NOT NULL UNIQUE,
-  display_name VARCHAR(100) NOT NULL,
-  description TEXT NULL
+  display_name VARCHAR(100) NOT NULL UNIQUE,
+  description TEXT NULL,
+  status ENUM('active', 'inactive', 'archived') DEFAULT 'active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  archived_at TIMESTAMP NULL DEFAULT NULL,
+  deactivated_at TIMESTAMP NULL DEFAULT NULL,
+  INDEX idx_universes_status (status)
 );
 
 CREATE TABLE types (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   label VARCHAR(50) NOT NULL UNIQUE,
-  display_name VARCHAR(100) NOT NULL,
+  display_name VARCHAR(100) NOT NULL UNIQUE,
   description TEXT NULL,
   icon_url VARCHAR(255) NULL,
   universe_id INT NOT NULL,
+  status ENUM('active', 'inactive', 'archived') DEFAULT 'active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  archived_at TIMESTAMP NULL DEFAULT NULL,
+  deactivated_at TIMESTAMP NULL DEFAULT NULL,
   FOREIGN KEY (universe_id) REFERENCES universes(id) ON DELETE RESTRICT,
-  INDEX idx_types_universe_id (universe_id)
+  INDEX idx_types_universe_id (universe_id),
+  INDEX idx_types_status (status)
 );
 
 CREATE TABLE genders (
@@ -24,17 +36,20 @@ CREATE TABLE genders (
 
 CREATE TABLE names (
   id CHAR(36) NOT NULL PRIMARY KEY,
-  label VARCHAR(100) NOT NULL,
+  value VARCHAR(100) NOT NULL,
   type_id INT NOT NULL,
   gender_id INT NOT NULL,
   length ENUM("short", "medium", "long") NOT NULL,
+  status ENUM('active', 'inactive', 'archived') DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  archived_at TIMESTAMP NULL DEFAULT NULL,
+  deactivated_at TIMESTAMP NULL DEFAULT NULL,
   FOREIGN KEY (type_id) REFERENCES types(id) ON DELETE RESTRICT,
   FOREIGN KEY (gender_id) REFERENCES genders(id) ON DELETE RESTRICT,
-  CONSTRAINT uniq_names_label_type UNIQUE (label, type_id),
-  INDEX idx_names_type (type_id),
-  INDEX idx_names_type_gender (type_id, gender_id)
+  CONSTRAINT uniq_names_value_type UNIQUE (value, type_id),
+  INDEX idx_names_status (status),
+  INDEX idx_names_type (type_id)
 );
 
 CREATE TABLE roles (

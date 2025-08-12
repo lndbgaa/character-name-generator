@@ -92,20 +92,24 @@ export default class User extends Model {
     return await this.save({ ...options, fields: updatedFields });
   }
 
-  public async suspend(options?: SaveOptions): Promise<void> {
+  public async suspend(options?: SaveOptions): Promise<User> {
     if (this.status === "active") {
       this.status = "suspended";
       this.suspended_at = dayjs().toDate();
       await this.save(options);
     }
+
+    return this;
   }
 
-  public async reactivate(options?: SaveOptions): Promise<void> {
+  public async reactivate(options?: SaveOptions): Promise<User> {
     if (this.status === "suspended") {
       this.status = "active";
       this.suspended_at = null;
       await this.save(options);
     }
+
+    return this;
   }
 
   public async deleteSoft(options?: SaveOptions): Promise<void> {

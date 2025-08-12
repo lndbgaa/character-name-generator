@@ -40,10 +40,15 @@ const errorHandler: ErrorRequestHandler = (err: Error, req: Request, res: Respon
       statusText,
       message: "The request contains one or more invalid or missing fields.",
       ...(isDev && {
-        errors: err.details.map((detail) => ({
-          field: Array.isArray(detail.path) && detail.path.length > 0 ? detail.path.join(".") : "root",
-          message: detail.message,
-        })),
+        errors: err.details.map((detail) => {
+          const [index, field] = detail.path;
+
+          return {
+            index: typeof index === "number" ? index : undefined,
+            field: typeof index === "number" ? field : index ?? "root",
+            message: detail.message,
+          };
+        }),
       }),
     });
   } else {

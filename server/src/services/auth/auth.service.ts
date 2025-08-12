@@ -1,7 +1,7 @@
 import { sequelize } from "@/database/mysql.js";
 import { RefreshToken, User } from "@/models/index.js";
 import CustomError from "@/utils/CustomError.js";
-import { generateAccessToken, generateRefreshToken } from "@/utils/authToken.utils";
+import { generateAccessToken, generateRefreshToken } from "@/utils/authToken.utils.js";
 
 import type { AuthResult, LoginUserData, RegisterUserData } from "@/types/auth.types";
 

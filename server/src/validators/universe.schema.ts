@@ -3,6 +3,13 @@ import Joi from "joi";
 import { DESCRIPTION_MAX, DISPLAY_NAME_MAX, LABEL_MAX } from "@/models/Universe.model.js";
 import { labelRegex } from "@/validators/patterns.js";
 
+export const universeIdSchema = Joi.number().integer().positive().required().messages({
+  "any.required": "The universe ID is required.",
+  "number.base": "The universe ID must be a number.",
+  "number.integer": "The universe ID must be an integer.",
+  "number.positive": "The universe ID must be a positive number.",
+});
+
 export const createUniverseSchema = Joi.object({
   label: Joi.string()
     .trim()
@@ -14,7 +21,7 @@ export const createUniverseSchema = Joi.object({
       "string.base": "The label must be a string.",
       "string.empty": "The label cannot be empty.",
       "string.max": `The label must not exceed ${LABEL_MAX} characters.`,
-      "string.pattern.base": "The label can only contain letters, numbers, underscores, and hyphens.",
+      "string.pattern.base": "The label can only contain letters, numbers and underscores.",
     }),
   displayName: Joi.string()
     .trim()
@@ -28,6 +35,7 @@ export const createUniverseSchema = Joi.object({
     }),
   description: Joi.string()
     .trim()
+    .min(2)
     .max(DESCRIPTION_MAX)
     .optional()
     .messages({
@@ -49,6 +57,7 @@ export const updateUniverseSchema = Joi.object({
     }),
   description: Joi.string()
     .trim()
+    .min(2)
     .max(DESCRIPTION_MAX)
     .allow("")
     .optional()

@@ -2,12 +2,13 @@ import Joi from "joi";
 
 import { DESCRIPTION_MAX, DISPLAY_NAME_MAX, ICON_URL_MAX, LABEL_MAX } from "@/models/Type.model.js";
 import { labelRegex } from "@/validators/patterns.js";
+import { universeIdSchema } from "@/validators/universe.schema.js";
 
-const universeIdSchema = Joi.number().integer().positive().required().messages({
-  "any.required": "The universe ID is required.",
-  "number.base": "The universe ID must be a number.",
-  "number.integer": "The universe ID must be an integer.",
-  "number.positive": "The universe ID must be a positive number.",
+export const typeIdSchema = Joi.number().integer().positive().required().messages({
+  "any.required": "The type ID is required.",
+  "number.base": "The type ID must be a number.",
+  "number.integer": "The type ID must be an integer.",
+  "number.positive": "The type ID must be a positive number.",
 });
 
 export const createTypeSchema = Joi.object({
@@ -22,7 +23,7 @@ export const createTypeSchema = Joi.object({
       "string.base": "The label must be a string.",
       "string.empty": "The label cannot be empty.",
       "string.max": `The label must not exceed ${LABEL_MAX} characters.`,
-      "string.pattern.base": "The label can only contain letters, numbers, underscores, and hyphens.",
+      "string.pattern.base": "The label can only contain letters, numbers and underscores.",
     }),
   displayName: Joi.string()
     .trim()

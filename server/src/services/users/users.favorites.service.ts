@@ -1,5 +1,5 @@
 import { Favorite, Name } from "@/models/index.js";
-import ProfileService from "@/services/users/users.profile.service.js";
+import UserService from "@/services/users/users.service.js";
 import CustomError from "@/utils/CustomError.js";
 
 import type { AddFavoriteData, UpdateFavoriteData } from "@/types/users/users.favorites.types.js";
@@ -17,7 +17,7 @@ class FavoriteService {
     limit: number,
     offset: number
   ): Promise<{ count: number; favorites: Favorite[] }> {
-    await ProfileService.findUserById(userId);
+    await UserService.findUserById(userId);
 
     const { count, rows: favorites } = await Favorite.findAndCountAll({
       where: { user_id: userId },
@@ -36,7 +36,7 @@ class FavoriteService {
    * @returns
    */
   public static async addFavorite(userId: string, data: AddFavoriteData): Promise<Favorite> {
-    await ProfileService.findUserById(userId);
+    await UserService.findUserById(userId);
 
     const { nameId, note } = data;
 

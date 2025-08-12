@@ -50,10 +50,11 @@ class UniverseService {
   /**
    * Retrieves all universes from the database.
    *
+   * @param {FindOptions} [options] - Additional Sequelize find options (e.g., includes).
    * @returns {Promise<Universe[]>} - An array of Universe instances.
    */
-  public static async findAllUniverses(): Promise<Universe[]> {
-    return Universe.findAll();
+  public static async findAllUniverses(options?: FindOptions): Promise<Universe[]> {
+    return Universe.findAll(options);
   }
 
   /**
@@ -85,19 +86,54 @@ class UniverseService {
    */
   public static async updateUniverse(id: number, data: UpdateUniverseData): Promise<Universe> {
     const universe = await this.findUniverseById(id);
-    return universe.updateInfo(data);
+
+    if (universe.status === "archived") {
+      throw new CustomError({
+        statusCode: 422,
+        message: "Cannot modify an archived universe.",
+      });
+    }
+
+    return universe.updateFields(data);
   }
 
   /**
-   * Deletes an existing universe.
+   * Activates a universe by setting its status to "active".
    *
-   * @param {number} id - The unique ID of the universe to delete.
-   * @returns {Promise<void>}
-   * @throws {CustomError} - If no universe is found with the provided ID (404 Not Found).
+   * @param {number} id - The unique ID of the universe to activate.
+   * @returns {Promise<Universe>} The updated universe instance with status set to "active".
+   * @throws {CustomError} If:
+   *    - No universe is found with the provided ID.
    */
-  public static async deleteUniverse(id: number): Promise<void> {
-    const universe = await this.findUniverseById(id);
-    await universe.destroy();
+  public static async activateUniverse(id: number): Promise<Universe> {
+    const universe = await UniverseService.findUniverseById(id);
+    return universe.setStatus("active");
+  }
+
+  /**
+   * Deactivates a universe by setting its status to "inactive".
+   *
+   * @param {number} id - The unique ID of the universe to deactivate.
+   * @returns {Promise<Universe>} The updated universe instance with status set to "inactive".
+   * @throws {CustomError} If:
+   *    - No universe is found with the provided ID.
+   */
+  public static async deactivateUniverse(id: number): Promise<Universe> {
+    const universe = await UniverseService.findUniverseById(id);
+    return universe.setStatus("inactive");
+  }
+
+  /**
+   * Archives a universe by setting its status to "archived".
+   *
+   * @param {number} id - The unique ID of the universe to archive.
+   * @returns {Promise<Universe>} The updated universe instance with status set to "archived".
+   * @throws {CustomError} If:
+   *    - No universe is found with the provided ID.
+   */
+  public static async archiveUniverse(id: number): Promise<Universe> {
+    const universe = await UniverseService.findUniverseById(id);
+    return universe.setStatus("archived");
   }
 }
 

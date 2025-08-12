@@ -64,7 +64,7 @@ function getTypeFromFileName(filePath: string) {
 function generateSeedSQL() {
   const files = getAllJsonFiles(inputDir);
 
-  let inserts = [`INSERT INTO names (id, label, type_id, gender_id, length) VALUES`];
+  let inserts = [`INSERT INTO names (id, value, type_id, gender_id, length) VALUES`];
 
   const validGenders = ["male", "female", "neutral"];
 
@@ -92,11 +92,11 @@ function generateSeedSQL() {
       if (!validGenders.includes(genderLower)) continue;
 
       const id = uuid();
-      const safeLabel = name.replace(/'/g, "''");
+      const safeValue = name.replace(/'/g, "''");
       const genderId = genderMap[genderLower as GenreKey];
-      const length = safeLabel.length >= 9 ? "long" : safeLabel.length >= 6 ? "medium" : "short";
+      const length = safeValue.length >= 9 ? "long" : safeValue.length >= 6 ? "medium" : "short";
 
-      inserts.push(`  ('${id}', '${safeLabel}', ${typeId}, ${genderId}, '${length}'),`);
+      inserts.push(`  ('${id}', '${safeValue}', ${typeId}, ${genderId}, '${length}'),`);
     }
   }
 

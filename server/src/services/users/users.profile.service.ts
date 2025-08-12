@@ -1,36 +1,11 @@
 import { User } from "@/models/index.js";
 import AuthService from "@/services/auth/auth.service.js";
 import UploadService from "@/services/upload.service.js";
-import CustomError from "@/utils/CustomError.js";
+import UserService from "@/services/users/users.service.js";
 
 import type { UpdateUserData } from "@/types/users/users.types";
-import { type FindOptions } from "sequelize";
 
 class ProfileService {
-  /**
-   *
-   * @param {string} userId - The unique ID of the user to retrieve.
-   * @param {FindOptions} [options] - Additional Sequelize find options (e.g., includes).
-   * @returns {Promise<User>} The found user instance.
-   * @throws {CustomError} If no user is found with the provided ID.
-   */
-  public static async findUserById(userId: string, options?: FindOptions): Promise<User> {
-    const user = await User.findOne({
-      where: { id: userId },
-      ...options,
-    });
-
-    if (!user) {
-      throw new CustomError({
-        statusCode: 404,
-        message: "No user found with the provided id.",
-        details: { userId },
-      });
-    }
-
-    return user;
-  }
-
   /**
    * Updates the profile details of a user.
    *
@@ -40,7 +15,7 @@ class ProfileService {
    * @throws {CustomError} If the user is not found or if the username is changed and already taken.
    */
   public static async updateProfile(userId: string, data: UpdateUserData): Promise<User> {
-    const user = await this.findUserById(userId, { include: [{ association: "role" }] });
+    const user = await UserService.findUserById(userId, { include: [{ association: "role" }] });
 
     if (data.username && data.username !== user.username) {
       await AuthService.assertUsernameIsUnique(data.username);
@@ -58,7 +33,7 @@ class ProfileService {
    * @throws {CustomError} If the user is not found.
    */
   public static async updateAvatar(userId: string, file: Express.Multer.File): Promise<{ url: string }> {
-    const user = await this.findUserById(userId);
+    const user = await UserService.findUserById(userId);
 
     const { secure_url: url } = await UploadService.uploadImage(file, `charnamegen/users/${userId}/profile-picture`);
 
