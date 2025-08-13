@@ -1,8 +1,12 @@
 import UniverseService from "@/services/universes.service.js";
-import catchAsync from "@/utils/catchAsync.js";
+import catchAsync from "@/utils/catch-async.utils.js";
 
 import type { CreateUniverseData, UpdateUniverseData } from "@/types/universes.types.js";
 import type { Request, Response } from "express";
+
+// ─────────────────────────────────────────────────────────────
+//  READ
+// ─────────────────────────────────────────────────────────────
 
 /**
  * Retrieves a specific universe by its ID.
@@ -43,6 +47,10 @@ export const getUniverses = catchAsync(async (req: Request, res: Response): Prom
   });
 });
 
+// ─────────────────────────────────────────────────────────────
+//  CREATE
+// ─────────────────────────────────────────────────────────────
+
 /**
  * Creates a new universe.
  */
@@ -57,6 +65,10 @@ export const createUniverse = catchAsync(async (req: Request, res: Response): Pr
     data: { universe },
   });
 });
+
+// ─────────────────────────────────────────────────────────────
+//  UPDATE
+// ─────────────────────────────────────────────────────────────
 
 /**
  * Updates an existing universe.

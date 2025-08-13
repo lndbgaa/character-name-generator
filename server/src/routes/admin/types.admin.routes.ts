@@ -1,8 +1,8 @@
 import { Router } from "express";
 
-import requireAuth from "@/middlewares/requireAuth.js";
-import requireRole from "@/middlewares/requireRole.js";
-import validate from "@/middlewares/validateAll.js";
+import requireAuth from "@/middlewares/require-auth.middleware.js";
+import requireRole from "@/middlewares/require-role.middleware.js";
+import validate from "@/middlewares/validate-all.middleware.js";
 
 import { idIntParamSchema } from "@/validators/common.schema.js";
 import { createTypeSchema, updateTypeSchema } from "@/validators/type.schema.js";

@@ -2,9 +2,13 @@ import { DataTypes, Model } from "sequelize";
 
 import { sequelize } from "@/database/mysql.js";
 
+import type { AccountRoleId, AccountRoleLabel } from "@/types/users/user.types.js";
+
+const LABEL_MAX = 50;
+
 export default class Role extends Model {
-  declare id: number;
-  declare label: string;
+  declare id: AccountRoleId;
+  declare label: AccountRoleLabel;
 }
 
 Role.init(
@@ -15,7 +19,7 @@ Role.init(
       autoIncrement: true,
     },
     label: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.STRING(LABEL_MAX),
       allowNull: false,
       unique: true,
     },

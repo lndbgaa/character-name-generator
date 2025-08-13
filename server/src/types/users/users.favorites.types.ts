@@ -1,11 +1,16 @@
-// -------------------- DTOs --------------------
+/* ===========================
+ *           DTOs
+ * =========================== */
+
 export interface FavoritePublicDTO {
   id: string;
   name: string;
   note: string | null;
 }
 
-// -------------------- Other structures --------------------
+/* ===========================
+ *     Payloads & Results
+ * =========================== */
 
 export interface AddFavoriteData {
   nameId: string;

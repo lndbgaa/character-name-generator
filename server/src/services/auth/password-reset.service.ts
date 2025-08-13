@@ -3,10 +3,10 @@ import dayjs from "dayjs";
 import config from "@/config/app.config.js";
 import { sequelize } from "@/database/mysql.js";
 import { PasswordResetToken, User } from "@/models/index.js";
-import { generateResetPasswordToken } from "@/utils/authToken.utils.js";
-import CustomError from "@/utils/CustomError.js";
-import renderTemplate from "@/utils/renderTemplate.js";
-import sendEmail from "@/utils/sendEmail.js";
+import { generateResetPasswordToken } from "@/utils/auth-token.utils.js";
+import CustomError from "@/utils/CustomError.utils.js";
+import renderTemplate from "@/utils/render-template.utils.js";
+import sendEmail from "@/utils/send-email.utils.js";
 
 const { clientUrl } = config;
 

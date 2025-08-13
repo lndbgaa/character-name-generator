@@ -2,9 +2,9 @@ import chalk from "chalk";
 import dayjs from "dayjs";
 
 import config from "@/config/app.config.js";
-import logger from "@/utils/logger.js";
+import logger from "@/utils/logger.utils.js";
 
-import type { ErrorDetails } from "@/types/error.types";
+import type { ErrorDetails } from "@/types/error.types.js";
 
 interface LogErrorArgs {
   statusCode: number;
@@ -70,6 +70,17 @@ const buildDevLog = ({
   return lines.join("\n");
 };
 
+/**
+ * Logs application errors with different formats for development and production.
+ *
+ * In development:
+ *  - Pretty-prints the error with colors, timestamp, and details.
+ * In production:
+ *  - Sends structured logs to the configured logger (winston).
+ *
+ * @param {LogErrorArgs} args - Error details (status, message, optional debug info, code, details, stack).
+ * @returns {void}
+ */
 const logError = (args: LogErrorArgs): void => {
   const { statusCode, statusText, message, debugMessage, details, code, stack = null } = args;
 

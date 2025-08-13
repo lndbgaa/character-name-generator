@@ -1,7 +1,7 @@
 import path from "path";
 import { fileURLToPath } from "url";
 
-import runSQLFile from "@/utils/runSQLFile.js";
+import runSQLFile from "@/utils/run-sql-file.utils.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

@@ -1,7 +1,13 @@
+import { TYPE_STATUSES } from "@/constants/type.constants.js";
+
 import type { DateTimeParts } from "@/types/common.types.js";
 import type { UniversePublicDTO } from "@/types/universes.types.js";
 
-export type TypeStatus = "active" | "inactive" | "archived";
+export type TypeStatus = (typeof TYPE_STATUSES)[keyof typeof TYPE_STATUSES];
+
+/* ===========================
+ *           DTOs
+ * =========================== */
 
 export interface TypePublicDTO {
   id: number;
@@ -25,6 +31,10 @@ export interface TypeAdminDTO {
   deactivatedAt?: DateTimeParts;
   archivedAt?: DateTimeParts;
 }
+
+/* ===========================
+ *     Payloads & Results
+ * =========================== */
 
 export interface CreateTypeData {
   universeId: number;

@@ -12,9 +12,9 @@ import express from "express";
 import config from "@/config/app.config.js";
 import connectMongo from "@/database/mongo.js";
 import { connectMySQL } from "@/database/mysql.js";
-import errorHandler from "@/middlewares/errorHandler.js";
+import errorHandler from "@/middlewares/error-handler.middleware.js";
 import mainRouter from "@/routes/index.js";
-import CustomError from "@/utils/CustomError.js";
+import CustomError from "@/utils/CustomError.utils.js";
 
 const app = express();
 const PORT = config.port;

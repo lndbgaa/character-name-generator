@@ -1,8 +1,8 @@
 import { Router } from "express";
 
-import imageUpload from "@/middlewares/imageUpload.js";
-import requireAuth from "@/middlewares/requireAuth.js";
-import validate from "@/middlewares/validateAll.js";
+import imageUpload from "@/middlewares/image-upload.middleware.js";
+import requireAuth from "@/middlewares/require-auth.middleware.js";
+import validate from "@/middlewares/validate-all.middleware.js";
 
 import { idUuidParamSchema } from "@/validators/common.schema.js";
 import { addFavoriteSchema, updateFavoriteSchema } from "@/validators/favorite.schema.js";
@@ -28,7 +28,12 @@ router.patch("/avatar", imageUpload, updateMyAvatar);
 // Favorites
 router.get("/favorites", getMyFavorites);
 router.post("/favorites", validate(addFavoriteSchema), addFavorite);
-router.patch("/favorites/:id", validate(idUuidParamSchema, "params"), validate(updateFavoriteSchema), updateFavorite);
+router.patch(
+  "/favorites/:id",
+  validate(idUuidParamSchema, "params"),
+  validate(updateFavoriteSchema),
+  updateFavorite
+);
 router.delete("/favorites/:id", validate(idUuidParamSchema, "params"), removeFavorite);
 
 export default router;

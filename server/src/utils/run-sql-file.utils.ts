@@ -8,6 +8,13 @@ import type { MySQLConfig } from "@/types/config.types.js";
 const { mysql: mysqlConfig }: { mysql: MySQLConfig } = config;
 const { user, host, password, database } = mysqlConfig;
 
+/**
+ * Executes a SQL script from a file against the configured MySQL database.
+ *
+ * @param {string} filePath - Absolute path to the SQL file.
+ * @returns {Promise<void>}
+ * @throws {Error} If the file is missing or execution fails.
+ */
 const runSQLFile = async (filePath: string): Promise<void> => {
   if (!fs.existsSync(filePath)) {
     throw new Error(`⚠️  File not found: ${filePath}`);

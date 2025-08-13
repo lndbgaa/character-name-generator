@@ -1,8 +1,8 @@
 import { DataTypes, Model } from "sequelize";
 
 import { sequelize } from "@/database/mysql.js";
-import CustomError from "@/utils/CustomError.js";
-import setIfChanged from "@/utils/setIfChanged.js";
+import CustomError from "@/utils/CustomError.utils.js";
+import setIfChanged from "@/utils/set-if-changed.utils.js";
 
 import type { Name, User } from "@/models/index.js";
 import type { FavoritePublicDTO } from "@/types/users/users.favorites.types.js";

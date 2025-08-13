@@ -1,10 +1,11 @@
 import dayjs from "dayjs";
 import { DataTypes, Model } from "sequelize";
 
+import { NAME_LENGTHS, NAME_STATUSES } from "@/constants/name.constants.js";
 import { sequelize } from "@/database/mysql.js";
-import CustomError from "@/utils/CustomError.js";
+import CustomError from "@/utils/CustomError.utils.js";
 import { toDateOnly, toTimeOnly } from "@/utils/date.utils.js";
-import setIfChanged from "@/utils/setIfChanged.js";
+import setIfChanged from "@/utils/set-if-changed.utils.js";
 import { nameRegex } from "@/validators/patterns.js";
 
 import type { Gender, Type } from "@/models/index.js";
@@ -71,10 +72,7 @@ export default class Name extends Model {
 
     if (setIfChanged(this, "value", data.value, false)) {
       updatedFields.push("value");
-
-      const len = this.value.trim().length; // !!!
-      this.length = len >= 9 ? "long" : len >= 6 ? "medium" : "short"; // !!!
-      updatedFields.push("length"); // !!!
+      updatedFields.push("length");
     }
 
     if (setIfChanged(this, "type_id", data.typeId, false)) updatedFields.push("type_id");
@@ -91,6 +89,7 @@ export default class Name extends Model {
 
     return await this.reload({
       include: [{ association: "type" }, { association: "gender" }],
+      transaction: options?.transaction,
     });
   }
 
@@ -101,33 +100,48 @@ export default class Name extends Model {
    * @returns
    */
   public async setStatus(newStatus: NameStatus, options?: SaveOptions): Promise<Name> {
-    if (this.status === newStatus) return this;
+    if (this.status === newStatus) {
+      return await this.reload({
+        include: [{ association: "type" }, { association: "gender" }],
+        transaction: options?.transaction,
+      });
+    }
 
-    if (this.status === "archived" && newStatus !== "archived") {
+    if (this.status === NAME_STATUSES.ARCHIVED && newStatus !== NAME_STATUSES.ARCHIVED) {
       throw new CustomError({
         statusCode: 422,
         message: "Cannot change status of an archived name.",
       });
     }
 
+    const now = dayjs().toDate();
+
     switch (newStatus) {
-      case "active":
-        this.status = "active";
+      case NAME_STATUSES.ACTIVE:
+        this.status = NAME_STATUSES.ACTIVE;
         this.deactivated_at = null;
         break;
-      case "inactive":
-        this.status = "inactive";
-        this.deactivated_at = dayjs().toDate();
+      case NAME_STATUSES.INACTIVE:
+        this.status = NAME_STATUSES.INACTIVE;
+        this.deactivated_at = now;
         break;
-      case "archived":
-        this.status = "archived";
+      case NAME_STATUSES.ARCHIVED:
+        this.status = NAME_STATUSES.ARCHIVED;
         this.deactivated_at = null;
-        this.archived_at = dayjs().toDate();
+        this.archived_at = now;
         break;
+      default: {
+        const _exhaustive: never = newStatus;
+        return _exhaustive;
+      }
     }
 
-    await this.save(options);
-    return this;
+    await this.save({ ...options, fields: ["status", "deactivated_at", "archived_at"] });
+
+    return await this.reload({
+      include: [{ association: "type" }, { association: "gender" }],
+      transaction: options?.transaction,
+    });
   }
 
   /**
@@ -158,12 +172,14 @@ export default class Name extends Model {
         ? {
             id: this.type.id,
             label: this.type.label,
+            displayName: this.type.display_name,
           }
         : null,
       gender: this.gender
         ? {
             id: this.gender.id,
             label: this.gender.label,
+            displayName: this.gender.display_name,
           }
         : null,
       createdAt: {
@@ -227,13 +243,13 @@ Name.init(
       onDelete: "RESTRICT",
     },
     length: {
-      type: DataTypes.ENUM("long", "medium", "short"),
+      type: DataTypes.ENUM(...Object.values(NAME_LENGTHS)),
       allowNull: false,
     },
     status: {
-      type: DataTypes.ENUM("active", "inactive", "archived"),
+      type: DataTypes.ENUM(...Object.values(NAME_STATUSES)),
       allowNull: false,
-      defaultValue: "active",
+      defaultValue: NAME_STATUSES.ACTIVE,
     },
     archived_at: {
       type: DataTypes.DATE,
@@ -279,11 +295,11 @@ Name.beforeValidate((name: Name) => {
       const length = trimmed.length;
 
       if (length >= 9) {
-        name.length = "long";
+        name.length = NAME_LENGTHS.LONG;
       } else if (length >= 6) {
-        name.length = "medium";
+        name.length = NAME_LENGTHS.MEDIUM;
       } else {
-        name.length = "short";
+        name.length = NAME_LENGTHS.SHORT;
       }
     }
   }

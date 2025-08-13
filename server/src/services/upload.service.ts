@@ -1,6 +1,6 @@
 import cloudinary from "@/config/cloudinary.config.js";
-import CustomError from "@/utils/CustomError.js";
-import dataUriFromFile from "@/utils/dataUriFromFile.js";
+import CustomError from "@/utils/CustomError.utils.js";
+import { dataUriFromBuffer } from "@/utils/data-uri.utils.js";
 
 import type { UploadApiResponse } from "cloudinary";
 
@@ -23,7 +23,7 @@ class UploadService {
       });
     }
 
-    const file64 = dataUriFromFile(file);
+    const file64 = dataUriFromBuffer(file.buffer, file.filename);
 
     try {
       return await cloudinary.uploader.upload(file64.content!, {
@@ -33,7 +33,7 @@ class UploadService {
         resource_type: "image",
       });
     } catch (err) {
-      // ??? log
+      // FIXME implement logging
 
       throw new CustomError({
         statusCode: 500,

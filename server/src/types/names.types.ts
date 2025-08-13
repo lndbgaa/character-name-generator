@@ -1,9 +1,11 @@
+import { NAME_LENGTHS, NAME_STATUSES } from "@/constants/name.constants.js";
+
 import type { Name } from "@/models/index.js";
 import type { DateTimeParts } from "@/types/common.types.js";
 
-export type NameLength = "long" | "short" | "medium";
+export type NameLength = (typeof NAME_LENGTHS)[keyof typeof NAME_LENGTHS];
 
-export type NameStatus = "active" | "inactive" | "archived";
+export type NameStatus = (typeof NAME_STATUSES)[keyof typeof NAME_STATUSES];
 
 /* ===========================
  *           DTOs
@@ -20,8 +22,8 @@ export interface NamePublicDTO {
 export interface NameAdminDTO {
   id: string;
   value: string;
-  type: { id: number; label: string } | null;
-  gender: { id: number; label: string } | null;
+  type: { id: number; label: string; displayName: string } | null;
+  gender: { id: number; label: string; displayName: string } | null;
   length: NameLength;
   status: NameStatus;
   createdAt: DateTimeParts;
@@ -69,24 +71,4 @@ export interface GenerateNameFilters {
   genderId?: number;
   charLength?: number;
   length?: NameLength;
-}
-
-/* ===========================
- *       HTTP Query Types
- * =========================== */
-
-export interface GenerateRandomNamesQuery {
-  count?: string;
-  genderId?: string;
-  charLength?: string;
-  length?: NameLength;
-}
-
-export interface GetNamesQuery {
-  search?: string;
-  typeId?: string;
-  genderId?: string;
-  charLength?: string;
-  length?: NameLength;
-  status?: NameStatus;
 }

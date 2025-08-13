@@ -1,14 +1,34 @@
 import jwt from "jsonwebtoken";
 
-import CustomError from "@/utils/CustomError.js";
+import CustomError from "@/utils/CustomError.utils.js";
 
 import type { CustomJwtPayload } from "@/types/auth.types.js";
 import type { StringValue } from "ms";
 
-export function generateJwt(payload: CustomJwtPayload, secret: string, expiresIn: StringValue | number) {
+/**
+ * Generates a signed JSON Web Token (JWT) with the given payload.
+ *
+ * @param {CustomJwtPayload} payload - Data to embed in the token.
+ * @param {string} secret - Secret key used for signing.
+ * @param {StringValue|number} expiresIn - Expiration time (e.g., "1h" or seconds).
+ * @returns {string} The signed JWT.
+ */
+export function generateJwt(
+  payload: CustomJwtPayload,
+  secret: string,
+  expiresIn: StringValue | number
+): string {
   return jwt.sign(payload, secret, { expiresIn });
 }
 
+/**
+ * Verifies and decodes a JSON Web Token (JWT).
+ *
+ * @param {string} token - The token to verify.
+ * @param {string} secret - Secret key used for verification.
+ * @returns {CustomJwtPayload} The decoded payload.
+ * @throws {CustomError} If the token is expired, invalid, or malformed.
+ */
 export function verifyJwt(token: string, secret: string): CustomJwtPayload {
   try {
     const decoded = jwt.verify(token, secret);

@@ -2,17 +2,22 @@ import { getReasonPhrase } from "http-status-codes";
 import Joi from "joi";
 
 import config from "@/config/app.config.js";
-import CustomError from "@/utils/CustomError.js";
-import logError from "@/utils/logError.js";
+import CustomError from "@/utils/CustomError.utils.js";
+import logError from "@/utils/log-error.utils.js";
 
-import { GENERIC_ERROR_MESSAGE } from "@/constants/index.js";
+import { GENERIC_ERROR_MESSAGE } from "@/constants/error.constants.js";
 
 import type { ErrorRequestHandler, NextFunction, Request, Response } from "express";
 
 const { env } = config;
 const isDev = env === "development";
 
-const errorHandler: ErrorRequestHandler = (err: Error, req: Request, res: Response, next: NextFunction): void => {
+const errorHandler: ErrorRequestHandler = (
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   if (err instanceof CustomError) {
     const { statusCode, statusText, message, debugMessage, code, details, stack } = err;
 

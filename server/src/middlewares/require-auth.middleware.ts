@@ -1,5 +1,5 @@
 import config from "@/config/app.config.js";
-import CustomError from "@/utils/CustomError.js";
+import CustomError from "@/utils/CustomError.utils.js";
 import { verifyJwt } from "@/utils/jwt.utils.js";
 
 import type { NextFunction, Request, Response } from "express";

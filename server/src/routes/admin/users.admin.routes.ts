@@ -1,30 +1,20 @@
 import { Router } from "express";
 
-import requireAuth from "@/middlewares/requireAuth.js";
-import requireRole from "@/middlewares/requireRole.js";
-import validate from "@/middlewares/validateAll.js";
+import requireAuth from "@/middlewares/require-auth.middleware.js";
+import requireRole from "@/middlewares/require-role.middleware.js";
+import validate from "@/middlewares/validate-all.middleware.js";
 
 import { idUuidParamSchema } from "@/validators/common.schema.js";
 
-import {
-  reactivateUser,
-  suspendUser,
-} from "@/controllers/users/users.controller.js";
+import { getUsers, reactivateUser, suspendUser } from "@/controllers/users/users.controller.js";
 
 const router = Router();
 
 router.use(requireAuth);
 router.use(requireRole(["admin"]));
 
-router.patch(
-  "/:id/suspend",
-  validate(idUuidParamSchema, "params"),
-  suspendUser
-);
-router.patch(
-  "/:id/reactivate",
-  validate(idUuidParamSchema, "params"),
-  reactivateUser
-);
+router.get("/", getUsers);
+router.patch("/:id/suspend", validate(idUuidParamSchema, "params"), suspendUser);
+router.patch("/:id/reactivate", validate(idUuidParamSchema, "params"), reactivateUser);
 
 export default router;

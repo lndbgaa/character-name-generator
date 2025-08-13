@@ -1,10 +1,10 @@
 import ProfileService from "@/services/users/users.profile.service.js";
 import UserService from "@/services/users/users.service.js";
-import catchAsync from "@/utils/catchAsync.js";
-import CustomError from "@/utils/CustomError.js";
+import catchAsync from "@/utils/catch-async.utils.js";
+import CustomError from "@/utils/CustomError.utils.js";
 
 import type { MulterRequest } from "@/types/config.types.js";
-import type { UpdateUserData } from "@/types/users/users.types";
+import type { UpdateUserData } from "@/types/users/user.types.js";
 import type { Request, Response } from "express";
 
 /**

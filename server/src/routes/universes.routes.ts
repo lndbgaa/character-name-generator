@@ -1,7 +1,7 @@
 import { Router } from "express";
 
-import optionalAuth from "@/middlewares/optionalAuth.js";
-import validate from "@/middlewares/validateAll.js";
+import optionalAuth from "@/middlewares/optional-auth.middleware.js";
+import validate from "@/middlewares/validate-all.middleware.js";
 import { idIntParamSchema } from "@/validators/common.schema.js";
 
 import { getUniverse, getUniverses } from "@/controllers/universes.controller.js";

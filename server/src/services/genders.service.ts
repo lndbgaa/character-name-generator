@@ -1,5 +1,5 @@
 import { Gender } from "@/models/index.js";
-import CustomError from "@/utils/CustomError.js";
+import CustomError from "@/utils/CustomError.utils.js";
 
 import type { FindOptions } from "sequelize";
 

@@ -1,6 +1,6 @@
 import { Favorite, Name } from "@/models/index.js";
 import UserService from "@/services/users/users.service.js";
-import CustomError from "@/utils/CustomError.js";
+import CustomError from "@/utils/CustomError.utils.js";
 
 import type { AddFavoriteData, UpdateFavoriteData } from "@/types/users/users.favorites.types.js";
 
@@ -74,7 +74,11 @@ class FavoriteService {
    * @param data
    * @returns
    */
-  public static async updateFavorite(userId: string, favoriteId: string, data: UpdateFavoriteData): Promise<Favorite> {
+  public static async updateFavorite(
+    userId: string,
+    favoriteId: string,
+    data: UpdateFavoriteData
+  ): Promise<Favorite> {
     const favorite = await Favorite.findOne({
       where: { id: favoriteId, user_id: userId },
       include: [{ association: "name" }],

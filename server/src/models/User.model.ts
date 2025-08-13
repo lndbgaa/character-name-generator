@@ -2,20 +2,22 @@ import bcrypt from "bcrypt";
 import dayjs from "dayjs";
 import { DataTypes, Model } from "sequelize";
 
+import { ACCOUNT_ROLES_LABEL, ACCOUNT_STATUSES } from "@/constants/user.constants.js";
 import { sequelize } from "@/database/mysql.js";
-import CustomError from "@/utils/CustomError.js";
+import CustomError from "@/utils/CustomError.utils.js";
 import { toDateOnly, toTimeOnly } from "@/utils/date.utils.js";
-import setIfChanged from "@/utils/setIfChanged.js";
+import setIfChanged from "@/utils/set-if-changed.utils.js";
 import { nameRegex, passwordRegex, usernameRegex } from "@/validators/patterns.js";
 
 import type { Role } from "@/models/index.js";
 import type {
+  AccountRoleId,
+  AccountStatus,
   AdminUserDTO,
   PrivateUserDTO,
   PublicUserDTO,
   UpdateUserData,
-  UserAccountStatus,
-} from "@/types/users/users.types";
+} from "@/types/users/user.types.js";
 import type { SaveOptions } from "sequelize";
 
 /**
@@ -39,14 +41,14 @@ import type { SaveOptions } from "sequelize";
  */
 export default class User extends Model {
   declare id: string;
-  declare role_id: number;
+  declare role_id: AccountRoleId;
   declare email: string;
   declare username: string;
   declare password: string;
   declare first_name: string;
   declare last_name: string;
   declare avatar_url: string | null;
-  declare status: UserAccountStatus;
+  declare status: AccountStatus;
   declare last_login: Date;
   declare created_at: Date;
   declare updated_at: Date;
@@ -93,8 +95,8 @@ export default class User extends Model {
   }
 
   public async suspend(options?: SaveOptions): Promise<User> {
-    if (this.status === "active") {
-      this.status = "suspended";
+    if (this.status === ACCOUNT_STATUSES.ACTIVE) {
+      this.status = ACCOUNT_STATUSES.SUSPENDED;
       this.suspended_at = dayjs().toDate();
       await this.save(options);
     }
@@ -103,8 +105,8 @@ export default class User extends Model {
   }
 
   public async reactivate(options?: SaveOptions): Promise<User> {
-    if (this.status === "suspended") {
-      this.status = "active";
+    if (this.status === ACCOUNT_STATUSES.SUSPENDED) {
+      this.status = ACCOUNT_STATUSES.ACTIVE;
       this.suspended_at = null;
       await this.save(options);
     }
@@ -113,8 +115,8 @@ export default class User extends Model {
   }
 
   public async deleteSoft(options?: SaveOptions): Promise<void> {
-    if (this.status !== "deleted") {
-      this.status = "deleted";
+    if (this.status !== ACCOUNT_STATUSES.DELETED) {
+      this.status = ACCOUNT_STATUSES.DELETED;
       this.deleted_at = dayjs().toDate();
       this.suspended_at = null;
       await this.save(options);
@@ -122,15 +124,15 @@ export default class User extends Model {
   }
 
   public isActive(): boolean {
-    return this.status === "active";
+    return this.status === ACCOUNT_STATUSES.ACTIVE;
   }
 
   public isSuspended(): boolean {
-    return this.status === "suspended";
+    return this.status === ACCOUNT_STATUSES.SUSPENDED;
   }
 
   public isDeleted(): boolean {
-    return this.status === "deleted";
+    return this.status === ACCOUNT_STATUSES.DELETED;
   }
 
   public toPublicDTO(): PublicUserDTO {
@@ -148,7 +150,7 @@ export default class User extends Model {
   public toPrivateDTO(): PrivateUserDTO {
     return {
       ...this.toPublicDTO(),
-      role: this.role?.label || "user",
+      role: this.role?.label || ACCOUNT_ROLES_LABEL.USER,
       firstName: this.first_name,
       lastName: this.last_name,
       lastLogin: {
@@ -232,8 +234,9 @@ User.init(
       allowNull: true,
     },
     status: {
-      type: DataTypes.ENUM("active", "suspended", "deleted"),
-      defaultValue: "active",
+      type: DataTypes.ENUM(...Object.values(ACCOUNT_STATUSES)),
+      allowNull: false,
+      defaultValue: ACCOUNT_STATUSES.ACTIVE,
     },
     last_login: {
       type: DataTypes.DATE,

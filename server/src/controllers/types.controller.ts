@@ -1,8 +1,12 @@
 import TypeService from "@/services/types.service.js";
-import catchAsync from "@/utils/catchAsync.js";
+import catchAsync from "@/utils/catch-async.utils.js";
 
 import type { CreateTypeData, UpdateTypeData } from "@/types/types.types.js";
 import type { Request, Response } from "express";
+
+// ─────────────────────────────────────────────────────────────
+//  READ
+// ─────────────────────────────────────────────────────────────
 
 /**
  * Retrieves a specific type by its ID.
@@ -24,9 +28,9 @@ export const getType = catchAsync(async (req: Request, res: Response): Promise<R
 });
 
 /**
- * Retrieves all types, optionally filtered by universe.
+ * Retrieves a list of types, optionally filtered by universe.
  */
-export const getAllTypes = catchAsync(async (req: Request, res: Response): Promise<Response> => {
+export const getTypes = catchAsync(async (req: Request, res: Response): Promise<Response> => {
   const universeId = req.query.universeId ? Number(req.query.universeId) : undefined;
   const userRole = req.user?.role;
 
@@ -44,6 +48,10 @@ export const getAllTypes = catchAsync(async (req: Request, res: Response): Promi
   });
 });
 
+// ─────────────────────────────────────────────────────────────
+//  CREATE
+// ─────────────────────────────────────────────────────────────
+
 /**
  * Creates a new type.
  */
@@ -58,6 +66,10 @@ export const createType = catchAsync(async (req: Request, res: Response): Promis
     data: { type: type.toAdminDTO() },
   });
 });
+
+// ─────────────────────────────────────────────────────────────
+//  UPDATE
+// ─────────────────────────────────────────────────────────────
 
 /**
  * Updates an existing type.

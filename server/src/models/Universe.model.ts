@@ -1,16 +1,17 @@
 import dayjs from "dayjs";
 import { DataTypes, Model } from "sequelize";
 
+import { UNIVERSE_STATUSES } from "@/constants/universe.constants.js";
 import { sequelize } from "@/database/mysql.js";
-import CustomError from "@/utils/CustomError.js";
+import CustomError from "@/utils/CustomError.utils.js";
 import { toDateOnly, toTimeOnly } from "@/utils/date.utils.js";
-import setIfChanged from "@/utils/setIfChanged.js";
+import setIfChanged from "@/utils/set-if-changed.utils.js";
 import { labelRegex } from "@/validators/patterns.js";
 
 import type {
   UniverseAdminDTO,
   UniversePublicDTO,
-  UnvierseStatus,
+  UniverseStatus,
   UpdateUniverseData,
 } from "@/types/universes.types.js";
 import type { SaveOptions } from "sequelize";
@@ -49,7 +50,7 @@ export default class Universe extends Model {
   declare label: string;
   declare display_name: string;
   declare description: string | null;
-  declare status: UnvierseStatus;
+  declare status: UniverseStatus;
   declare created_at: Date;
   declare updated_at: Date;
   declare archived_at: Date | null;
@@ -82,33 +83,40 @@ export default class Universe extends Model {
    * @param newStatus
    * @returns
    */
-  public async setStatus(newStatus: UnvierseStatus, options?: SaveOptions): Promise<Universe> {
+  public async setStatus(newStatus: UniverseStatus, options?: SaveOptions): Promise<Universe> {
     if (newStatus === this.status) return this;
 
-    if (this.status === "archived" && newStatus !== "archived") {
+    if (this.status === UNIVERSE_STATUSES.ARCHIVED && newStatus !== UNIVERSE_STATUSES.ARCHIVED) {
       throw new CustomError({
         statusCode: 422,
         message: "Cannot change status of an archived universe.",
       });
     }
 
+    const now = dayjs().toDate();
+
     switch (newStatus) {
-      case "active":
-        this.status = "active";
+      case UNIVERSE_STATUSES.ACTIVE:
+        this.status = UNIVERSE_STATUSES.ACTIVE;
         this.deactivated_at = null;
         break;
-      case "inactive":
-        this.status = "inactive";
-        this.deactivated_at = dayjs().toDate();
+      case UNIVERSE_STATUSES.INACTIVE:
+        this.status = UNIVERSE_STATUSES.INACTIVE;
+        this.deactivated_at = now;
         break;
-      case "archived":
-        this.status = "archived";
+      case UNIVERSE_STATUSES.ARCHIVED:
+        this.status = UNIVERSE_STATUSES.ARCHIVED;
         this.deactivated_at = null;
-        this.archived_at = dayjs().toDate();
+        this.archived_at = now;
         break;
+      default: {
+        const _exhaustive: never = newStatus;
+        return _exhaustive;
+      }
     }
 
     await this.save(options);
+
     return this;
   }
 
@@ -207,9 +215,9 @@ Universe.init(
       },
     },
     status: {
-      type: DataTypes.ENUM("active", "inactive", "archived"),
+      type: DataTypes.ENUM(...Object.values(UNIVERSE_STATUSES)),
       allowNull: false,
-      defaultValue: "active",
+      defaultValue: UNIVERSE_STATUSES.ACTIVE,
     },
     archived_at: {
       type: DataTypes.DATE,

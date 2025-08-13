@@ -1,10 +1,11 @@
 import dayjs from "dayjs";
 import { DataTypes, Model } from "sequelize";
 
+import { TYPE_STATUSES } from "@/constants/type.constants.js";
 import { sequelize } from "@/database/mysql.js";
-import CustomError from "@/utils/CustomError.js";
+import CustomError from "@/utils/CustomError.utils.js";
 import { toDateOnly, toTimeOnly } from "@/utils/date.utils.js";
-import setIfChanged from "@/utils/setIfChanged.js";
+import setIfChanged from "@/utils/set-if-changed.utils.js";
 import { labelRegex } from "@/validators/patterns.js";
 
 import type { Universe } from "@/models/index.js";
@@ -77,7 +78,10 @@ export default class Type extends Model {
 
     await this.save({ ...options, fields: updatedFields });
 
-    return await this.reload({ include: [{ association: "universe" }] });
+    return await this.reload({
+      include: [{ association: "universe" }],
+      transaction: options?.transaction,
+    });
   }
 
   /**
@@ -87,35 +91,47 @@ export default class Type extends Model {
    */
   public async setStatus(newStatus: TypeStatus, options?: SaveOptions): Promise<Type> {
     if (newStatus === this.status) {
-      return await this.reload({ include: [{ association: "universe" }] });
+      return await this.reload({
+        include: [{ association: "universe" }],
+        transaction: options?.transaction,
+      });
     }
 
-    if (this.status === "archived" && newStatus !== "archived") {
+    if (this.status === TYPE_STATUSES.ARCHIVED && newStatus !== TYPE_STATUSES.ARCHIVED) {
       throw new CustomError({
         statusCode: 422,
         message: "Cannot change status of an archived type.",
       });
     }
 
+    const now = dayjs().toDate();
+
     switch (newStatus) {
-      case "active":
-        this.status = "active";
+      case TYPE_STATUSES.ACTIVE:
+        this.status = TYPE_STATUSES.ACTIVE;
         this.deactivated_at = null;
         break;
-      case "inactive":
-        this.status = "inactive";
-        this.deactivated_at = dayjs().toDate();
+      case TYPE_STATUSES.INACTIVE:
+        this.status = TYPE_STATUSES.INACTIVE;
+        this.deactivated_at = now;
         break;
-      case "archived":
-        this.status = "archived";
+      case TYPE_STATUSES.ARCHIVED:
+        this.status = TYPE_STATUSES.ARCHIVED;
         this.deactivated_at = null;
-        this.archived_at = dayjs().toDate();
+        this.archived_at = now;
         break;
+      default: {
+        const _exhaustive: never = newStatus;
+        return _exhaustive;
+      }
     }
 
-    await this.save(options);
+    await this.save({ ...options, fields: ["status", "deactivated_at", "archived_at"] });
 
-    return await this.reload({ include: [{ association: "universe" }] });
+    return await this.reload({
+      include: [{ association: "universe" }],
+      transaction: options?.transaction,
+    });
   }
 
   /**
@@ -235,9 +251,9 @@ Type.init(
       onDelete: "RESTRICT",
     },
     status: {
-      type: DataTypes.ENUM("active", "inactive", "archived"),
+      type: DataTypes.ENUM(...Object.values(TYPE_STATUSES)),
       allowNull: false,
-      defaultValue: "active",
+      defaultValue: TYPE_STATUSES.ACTIVE,
     },
     archived_at: {
       type: DataTypes.DATE,

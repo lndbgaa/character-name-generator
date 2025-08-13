@@ -1,9 +1,9 @@
 import { Router } from "express";
 
-import jsonUpload from "@/middlewares/jsonUpload.js";
-import requireAuth from "@/middlewares/requireAuth.js";
-import requireRole from "@/middlewares/requireRole.js";
-import validate from "@/middlewares/validateAll.js";
+import jsonUpload from "@/middlewares/json-upload.middleware.js";
+import requireAuth from "@/middlewares/require-auth.middleware.js";
+import requireRole from "@/middlewares/require-role.middleware.js";
+import validate from "@/middlewares/validate-all.middleware.js";
 
 import { idUuidParamSchema } from "@/validators/common.schema.js";
 import { createNameSchema, getNamesSchema, updateNameSchema } from "@/validators/name.schema.js";

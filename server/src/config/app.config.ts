@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 
-import getEnvVar from "@/utils/getEnvVar.js";
+import { getEnvVar } from "@/utils/env.utils.js";
 
 import type { StringValue } from "ms";
 

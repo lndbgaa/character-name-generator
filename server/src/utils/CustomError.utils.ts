@@ -1,9 +1,12 @@
 import { getReasonPhrase } from "http-status-codes";
 
-import { GENERIC_ERROR_MESSAGE } from "@/constants/index.js";
+import { GENERIC_ERROR_MESSAGE } from "@/constants/error.constants.js";
 
-import type { ErrorDetails } from "@/types/error.types";
+import type { ErrorDetails } from "@/types/error.types.js";
 
+/**
+ * Custom error with HTTP status (code/text), optional code, debug message, and details.
+ */
 class CustomError extends Error {
   public readonly statusCode: number;
   public readonly statusText: string;

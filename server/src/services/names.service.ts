@@ -3,7 +3,7 @@ import { col, fn, Op, Sequelize, where as whereFn } from "sequelize";
 import { Favorite, Name } from "@/models/index.js";
 import GenderService from "@/services/genders.service.js";
 import TypeService from "@/services/types.service.js";
-import CustomError from "@/utils/CustomError.js";
+import CustomError from "@/utils/CustomError.utils.js";
 import { createNameSchema } from "@/validators/name.schema.js";
 
 import type {
@@ -97,7 +97,10 @@ class NameService {
       }
 
       if (charLength) {
-        where[Op.and] = [...(where[Op.and] ?? []), whereFn(fn("CHAR_LENGTH", col("value")), { [Op.eq]: charLength })];
+        where[Op.and] = [
+          ...(where[Op.and] ?? []),
+          whereFn(fn("CHAR_LENGTH", col("value")), { [Op.eq]: charLength }),
+        ];
       }
 
       if (status) {
@@ -308,7 +311,10 @@ class NameService {
       }
 
       if (charLength) {
-        where[Op.and] = [...(where[Op.and] ?? []), whereFn(fn("CHAR_LENGTH", col("value")), { [Op.eq]: charLength })];
+        where[Op.and] = [
+          ...(where[Op.and] ?? []),
+          whereFn(fn("CHAR_LENGTH", col("value")), { [Op.eq]: charLength }),
+        ];
       }
     }
 

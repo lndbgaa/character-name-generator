@@ -3,7 +3,7 @@ import AuthService from "@/services/auth/auth.service.js";
 import UploadService from "@/services/upload.service.js";
 import UserService from "@/services/users/users.service.js";
 
-import type { UpdateUserData } from "@/types/users/users.types";
+import type { UpdateUserData } from "@/types/users/user.types";
 
 class ProfileService {
   /**

@@ -1,15 +1,15 @@
 import NameService from "@/services/names.service.js";
-import catchAsync from "@/utils/catchAsync.js";
-import CustomError from "@/utils/CustomError.js";
-import parsePagination from "@/utils/parsePagination.js";
+import catchAsync from "@/utils/catch-async.utils.js";
+import CustomError from "@/utils/CustomError.utils.js";
+import parsePagination from "@/utils/parse-pagination.utils.js";
 
 import type { MulterRequest } from "@/types/config.types.js";
 import type {
   CreateNameData,
   GenerateNameFilters,
-  GenerateRandomNamesQuery,
   GetNameFilters,
-  GetNamesQuery,
+  NameLength,
+  NameStatus,
   UpdateNameData,
 } from "@/types/names.types.js";
 import type { Request, Response } from "express";
@@ -41,20 +41,22 @@ export const getName = catchAsync(async (req: Request, res: Response): Promise<R
  * Retrieves a paginated list of names with optional filters (search, type, gender, status...).
  */
 export const getNames = catchAsync(async (req: Request, res: Response): Promise<Response> => {
-  const { search, typeId, genderId, length, charLength, status }: GetNamesQuery = req.query;
+  const { search, typeId, genderId, length, charLength, status } = req.query;
 
   const filters: GetNameFilters = {
     search: typeof search === "string" ? search.trim() : undefined,
     typeId: typeId ? Number(typeId) : undefined,
     genderId: genderId ? Number(genderId) : undefined,
     charLength: charLength ? Number(charLength) : undefined,
-    length,
-    status,
+    length: length as NameLength | undefined,
+    status: status as NameStatus | undefined,
   };
 
   const { limit, offset, page } = parsePagination(req);
 
   const { count, names } = await NameService.getNames(limit, offset, filters);
+
+  const totalPages = Math.ceil(count / limit);
 
   const dtos = names.map((n) => n.toAdminDTO());
 
@@ -66,7 +68,9 @@ export const getNames = catchAsync(async (req: Request, res: Response): Promise<
         page,
         limit,
         total: count,
-        totalPages: Math.ceil(count / limit),
+        totalPages,
+        hasNextPage: page < totalPages && totalPages > 0,
+        hasPrevPage: page > 1,
       },
     },
   });
@@ -75,31 +79,33 @@ export const getNames = catchAsync(async (req: Request, res: Response): Promise<
 /**
  * Generates and returns random names for a given type with optional filters (gender, length...).
  */
-export const generateRandomNamesByType = catchAsync(async (req: Request, res: Response): Promise<Response> => {
-  const typeId = Number(req.params.id);
+export const generateRandomNamesByType = catchAsync(
+  async (req: Request, res: Response): Promise<Response> => {
+    const typeId = Number(req.params.id);
 
-  const { count = "10", genderId, length, charLength }: GenerateRandomNamesQuery = req.query;
+    const { count = "10", genderId, length, charLength } = req.query;
 
-  const filters: GenerateNameFilters = {
-    genderId: genderId ? Number(genderId) : undefined,
-    charLength: charLength ? Number(charLength) : undefined,
-    length,
-  };
+    const filters: GenerateNameFilters = {
+      genderId: genderId ? Number(genderId) : undefined,
+      charLength: charLength ? Number(charLength) : undefined,
+      length: length as NameLength | undefined,
+    };
 
-  const limit = Math.min(Math.max(Number(count) || 10, 1), 50);
+    const limit = Math.min(Math.max(Number(count) || 10, 1), 50);
 
-  const names = await NameService.generateRandomNamesFromType(typeId, limit, filters);
+    const names = await NameService.generateRandomNamesFromType(typeId, limit, filters);
 
-  const dtos = names.map((n) => n.toPublicDTO());
+    const dtos = names.map((n) => n.toPublicDTO());
 
-  return res.status(200).json({
-    success: true,
-    data: {
-      names: dtos,
-      total: names.length,
-    },
-  });
-});
+    return res.status(200).json({
+      success: true,
+      data: {
+        names: dtos,
+        total: names.length,
+      },
+    });
+  }
+);
 
 // ─────────────────────────────────────────────────────────────
 //  CREATE
@@ -151,37 +157,39 @@ export const bulkCreateNames = catchAsync(async (req: Request, res: Response): P
 /**
  * Imports and creates names from an uploaded JSON file.
  */
-export const importNamesFromFile = catchAsync(async (req: MulterRequest, res: Response): Promise<Response> => {
-  const { file } = req;
+export const importNamesFromFile = catchAsync(
+  async (req: MulterRequest, res: Response): Promise<Response> => {
+    const { file } = req;
 
-  if (!file) {
-    throw new CustomError({
-      statusCode: 400,
-      message: "No file selected. Please choose a file to upload.",
+    if (!file) {
+      throw new CustomError({
+        statusCode: 400,
+        message: "No file selected. Please choose a file to upload.",
+      });
+    }
+
+    const { created, skipped, failed } = await NameService.importFromJsonBuffer(file.buffer);
+
+    const dtos = created.map((n) => n.toAdminDTO());
+
+    const message =
+      created.length === 0
+        ? "No names imported from file."
+        : created.length === 1
+        ? "1 name successfully imported from file."
+        : `${created.length} names successfully imported from file.`;
+
+    return res.status(201).json({
+      success: true,
+      message,
+      data: {
+        names: dtos,
+        skipped,
+        failed,
+      },
     });
   }
-
-  const { created, skipped, failed } = await NameService.importFromJsonBuffer(file.buffer);
-
-  const dtos = created.map((n) => n.toAdminDTO());
-
-  const message =
-    created.length === 0
-      ? "No names imported from file."
-      : created.length === 1
-      ? "1 name successfully imported from file."
-      : `${created.length} names successfully imported from file.`;
-
-  return res.status(201).json({
-    success: true,
-    message,
-    data: {
-      names: dtos,
-      skipped,
-      failed,
-    },
-  });
-});
+);
 
 // ─────────────────────────────────────────────────────────────
 //  UPDATE

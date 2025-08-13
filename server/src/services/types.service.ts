@@ -1,6 +1,6 @@
 import { Type } from "@/models/index.js";
 import UniverseService from "@/services/universes.service.js";
-import CustomError from "@/utils/CustomError.js";
+import CustomError from "@/utils/CustomError.utils.js";
 
 import type { CreateTypeData, UpdateTypeData } from "@/types/types.types.js";
 import type { FindOptions, WhereOptions } from "sequelize";

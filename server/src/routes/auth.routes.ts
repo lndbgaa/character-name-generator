@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import validate from "@/middlewares/validateAll.js";
+import validate from "@/middlewares/validate-all.middleware.js";
 
 import {
   loginSchema,

@@ -3,8 +3,8 @@ import ms from "ms";
 import config from "@/config/app.config.js";
 import AuthService from "@/services/auth/auth.service.js";
 import PasswordResetService from "@/services/auth/password-reset.service.js";
-import catchAsync from "@/utils/catchAsync.js";
-import CustomError from "@/utils/CustomError.js";
+import catchAsync from "@/utils/catch-async.utils.js";
+import CustomError from "@/utils/CustomError.utils.js";
 
 import type { LoginUserData, RegisterUserData } from "@/types/auth.types.js";
 import type { CookieOptions, Request, Response } from "express";
@@ -111,9 +111,8 @@ export const refreshUserAccessToken = catchAsync(async (req: Request, res: Respo
       });
     }
 
-    const { accessToken: newAccessToken, refreshToken: newRefreshToken } = await AuthService.refreshUserAccessToken(
-      refreshToken
-    );
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+      await AuthService.refreshUserAccessToken(refreshToken);
 
     res.cookie("refreshToken", newRefreshToken, generateCookieOptions());
 

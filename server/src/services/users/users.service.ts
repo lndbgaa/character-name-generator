@@ -1,8 +1,13 @@
+import { col, fn, Op, Sequelize } from "sequelize";
+
 import { User } from "@/models/index.js";
-import CustomError from "@/utils/CustomError.js";
+import RoleService from "@/services/roles.service.js";
+import CustomError from "@/utils/CustomError.utils.js";
+import { escapeLike } from "@/utils/string.utils.js";
 
+import type { FlexibleWhere } from "@/types/sequelize.types.js";
+import type { GetUsersFilters, GetUserSortOptions } from "@/types/users/user.types.js";
 import type { FindOptions } from "sequelize";
-
 class UserService {
   /**
    * Retrieves a user by their unique ID.
@@ -27,6 +32,72 @@ class UserService {
     }
 
     return user;
+  }
+
+  /**
+   *
+   * @param {number} limit
+   * @param {number} offset
+   * @param {GetUsersFilters} filters
+   * @returns {Promise<{ count: number; users: User[] }>}
+   * @throws {CustomError} If:
+   */
+
+  public static async findAllUsers(
+    limit: number,
+    offset: number,
+    filters?: GetUsersFilters,
+    orderOpts: GetUserSortOptions = { sort: "created_at", dir: "DESC" }
+  ): Promise<{ count: number; users: User[] }> {
+    let where: FlexibleWhere<User> = {};
+
+    if (filters) {
+      const { roleId, status } = filters;
+      let { search } = filters;
+
+      if (roleId) {
+        await RoleService.findRoleById(roleId);
+        where.role_id = roleId;
+      }
+
+      if (status) {
+        where.status = status;
+      }
+
+      if (search && search.length > 0) {
+        search = search.trim();
+
+        if (search.length > 100) search = search.slice(0, 100);
+
+        const safe = escapeLike(search);
+        const term = `%${safe}%`;
+
+        where[Op.or] = [
+          ...(where[Op.or] ?? []),
+          { email: { [Op.like]: term } },
+          { username: { [Op.like]: term } },
+          { first_name: { [Op.like]: term } },
+          { last_name: { [Op.like]: term } },
+          Sequelize.where(fn("CONCAT_WS", col("first_name"), " ", col("last_name")), { [Op.like]: term }),
+        ];
+      }
+    }
+
+    const { count, rows } = await User.findAndCountAll({
+      where,
+      include: [{ association: "role" }],
+      limit,
+      offset,
+      order: [
+        [orderOpts.sort, orderOpts.dir],
+        ["created_at", "DESC"],
+        ["id", "ASC"],
+      ],
+      distinct: true,
+      attributes: { exclude: ["password"] },
+    });
+
+    return { count, users: rows };
   }
 
   /**

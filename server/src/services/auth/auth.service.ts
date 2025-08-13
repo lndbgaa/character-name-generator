@@ -1,9 +1,9 @@
 import { sequelize } from "@/database/mysql.js";
 import { RefreshToken, User } from "@/models/index.js";
-import CustomError from "@/utils/CustomError.js";
-import { generateAccessToken, generateRefreshToken } from "@/utils/authToken.utils.js";
+import CustomError from "@/utils/CustomError.utils.js";
+import { generateAccessToken, generateRefreshToken } from "@/utils/auth-token.utils.js";
 
-import type { AuthResult, LoginUserData, RegisterUserData } from "@/types/auth.types";
+import type { AuthResult, LoginUserData, RegisterUserData } from "@/types/auth.types.js";
 
 export default class AuthService {
   /**
@@ -63,7 +63,7 @@ export default class AuthService {
         { transaction }
       );
 
-      const refreshToken = await generateRefreshToken(newUser.id, transaction);
+      const refreshToken = await generateRefreshToken(newUser.id, { transaction });
 
       return {
         newUser,
@@ -107,7 +107,7 @@ export default class AuthService {
 
       user.updateLastLogin({ transaction });
 
-      const refreshToken = await generateRefreshToken(userId, transaction);
+      const refreshToken = await generateRefreshToken(userId, { transaction });
       const accessToken = generateAccessToken(userId, userRole);
 
       return {
@@ -167,7 +167,7 @@ export default class AuthService {
     const newRefreshToken = await sequelize.transaction(async (transaction): Promise<RefreshToken> => {
       tokenRecord.markAsRevoked({ transaction });
 
-      return await generateRefreshToken(userId, transaction);
+      return await generateRefreshToken(userId, { transaction });
     });
 
     const userRole = user.role?.label || "user";
