@@ -9,9 +9,11 @@ dayjs.extend(customParseFormat);
 import cookieParser from "cookie-parser";
 import express from "express";
 
+import "@/models/index.js";
+
 import config from "@/config/app.config.js";
-import connectMongo from "@/database/mongo.js";
-import { connectMySQL } from "@/database/mysql.js";
+import connectMongo from "@/database/mongo.database.js";
+import { connectMySQL } from "@/database/mysql.database.js";
 import errorHandler from "@/middlewares/error-handler.middleware.js";
 import mainRouter from "@/routes/index.js";
 import CustomError from "@/utils/CustomError.utils.js";

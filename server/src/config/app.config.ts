@@ -19,8 +19,10 @@ if (fs.existsSync(envPath)) {
   console.log(`⚠️ .env.${env} not found. Falling back to default .env file`);
 }
 
-const serverUrl = env === "production" ? getEnvVar("SERVER_URL") : "http://localhost:8080";
-const clientUrl = env === "production" ? getEnvVar("CLIENT_URL") : "http://localhost:5173";
+const serverUrl =
+  env === "production" ? getEnvVar("SERVER_URL") : "http://localhost:8080";
+const clientUrl =
+  env === "production" ? getEnvVar("CLIENT_URL") : "http://localhost:5173";
 
 const config = {
   env,

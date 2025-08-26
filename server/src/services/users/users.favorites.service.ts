@@ -93,7 +93,7 @@ class FavoriteService {
 
     const { note } = data;
 
-    return favorite.updateNote(note);
+    return favorite.setNote(note);
   }
 
   /**

@@ -5,6 +5,7 @@ import PasswordResetToken from "@/models/PasswordResetToken.model.js";
 import RefreshToken from "@/models/RefreshToken.model.js";
 import Role from "@/models/Role.model.js";
 import Type from "@/models/Type.model.js";
+import TypeAllowedGender from "@/models/TypeAllowedGender.model.js";
 import Universe from "@/models/Universe.model.js";
 import User from "@/models/User.model.js";
 
@@ -16,6 +17,20 @@ Name.belongsTo(Type, { foreignKey: "type_id", as: "type" });
 
 Gender.hasMany(Name, { foreignKey: "gender_id", as: "names" });
 Name.belongsTo(Gender, { foreignKey: "gender_id", as: "gender" });
+
+Type.belongsToMany(Gender, {
+  through: TypeAllowedGender,
+  foreignKey: "type_id",
+  otherKey: "gender_id",
+  as: "allowed_genders",
+});
+
+Gender.belongsToMany(Type, {
+  through: TypeAllowedGender,
+  foreignKey: "gender_id",
+  otherKey: "type_id",
+  as: "allowed_types",
+});
 
 Favorite.belongsTo(User, { foreignKey: "user_id", as: "user" });
 User.hasMany(Favorite, { foreignKey: "user_id", as: "favorites" });
@@ -30,4 +45,4 @@ User.hasMany(RefreshToken, { foreignKey: "user_id", as: "refresh_tokens" });
 PasswordResetToken.belongsTo(User, { foreignKey: "user_id", as: "user" });
 User.hasMany(PasswordResetToken, { foreignKey: "user_id", as: "user" });
 
-export { Favorite, Gender, Name, PasswordResetToken, RefreshToken, Role, Type, Universe, User };
+export { Favorite, Gender, Name, PasswordResetToken, RefreshToken, Role, Type, TypeAllowedGender, Universe, User };

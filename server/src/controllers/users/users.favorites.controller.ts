@@ -15,6 +15,8 @@ export const getMyFavorites = catchAsync(async (req: Request, res: Response): Pr
 
   const { count, favorites } = await FavoriteService.getFavorites(userId, limit, offset);
 
+  const totalPages = Math.ceil(count / limit);
+
   const dtos = favorites.map((f) => f.toPublicDTO());
 
   return res.status(200).json({
@@ -25,7 +27,9 @@ export const getMyFavorites = catchAsync(async (req: Request, res: Response): Pr
         page,
         limit,
         total: count,
-        totalPages: Math.ceil(count / limit),
+        totalPages,
+        hasNextPage: page < totalPages && totalPages > 0,
+        hasPrevPage: page > 1,
       },
     },
   });

@@ -24,7 +24,12 @@ router.use(requireRole(["admin"]));
 router.post("/", validate(createTypeSchema), createType);
 
 // Update
-router.patch("/:id", validate(idIntParamSchema, "params"), validate(updateTypeSchema), updateType);
+router.patch(
+  "/:id",
+  validate(idIntParamSchema, "params"),
+  validate(updateTypeSchema),
+  updateType
+);
 router.patch("/:id/activate", validate(idIntParamSchema, "params"), activateType);
 router.patch("/:id/deactivate", validate(idIntParamSchema, "params"), deactivateType);
 router.patch("/:id/archive", validate(idIntParamSchema, "params"), archiveType);

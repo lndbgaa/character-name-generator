@@ -1,7 +1,7 @@
 import TypeService from "@/services/types.service.js";
 import catchAsync from "@/utils/catch-async.utils.js";
 
-import type { CreateTypeData, UpdateTypeData } from "@/types/types.types.js";
+import type { CreateTypePayload, UpdateTypePayload } from "@/types/types.types.js";
 import type { Request, Response } from "express";
 
 // ─────────────────────────────────────────────────────────────
@@ -21,9 +21,11 @@ export const getType = catchAsync(async (req: Request, res: Response): Promise<R
     where: isAdmin ? undefined : { status: "active" },
   });
 
+  const dto = isAdmin ? type.toAdminDTO() : type.toPublicDTO();
+
   return res.status(200).json({
     success: true,
-    data: { type: isAdmin ? type.toAdminDTO() : type.toPublicDTO() },
+    data: { type: dto },
   });
 });
 
@@ -31,12 +33,12 @@ export const getType = catchAsync(async (req: Request, res: Response): Promise<R
  * Retrieves a list of types, optionally filtered by universe.
  */
 export const getTypes = catchAsync(async (req: Request, res: Response): Promise<Response> => {
-  const universeId = req.query.universeId ? Number(req.query.universeId) : undefined;
+  const universeLabel = typeof req.query.universe === "string" ? req.query.universe : undefined;
   const userRole = req.user?.role;
 
   const isAdmin = userRole === "admin";
 
-  const types = await TypeService.findAllTypes(universeId, {
+  const types = await TypeService.findTypes(universeLabel, {
     where: isAdmin ? undefined : { status: "active" },
   });
 
@@ -56,14 +58,16 @@ export const getTypes = catchAsync(async (req: Request, res: Response): Promise<
  * Creates a new type.
  */
 export const createType = catchAsync(async (req: Request, res: Response): Promise<Response> => {
-  const data: CreateTypeData = req.body;
+  const data: CreateTypePayload = req.body;
 
   const type = await TypeService.createType(data);
+
+  const dto = type.toAdminDTO();
 
   return res.status(201).json({
     success: true,
     message: "Type created successfully.",
-    data: { type: type.toAdminDTO() },
+    data: { type: dto },
   });
 });
 
@@ -76,14 +80,16 @@ export const createType = catchAsync(async (req: Request, res: Response): Promis
  */
 export const updateType = catchAsync(async (req: Request, res: Response): Promise<Response> => {
   const typeId = Number(req.params.id);
-  const data: UpdateTypeData = req.body;
+  const data: UpdateTypePayload = req.body;
 
   const type = await TypeService.updateType(typeId, data);
 
+  const dto = type.toAdminDTO();
+
   return res.status(200).json({
     success: true,
-    message: "Type updated successfully.",
-    data: { type: type.toAdminDTO() },
+    message: "Type successfully updated.",
+    data: { type: dto },
   });
 });
 
@@ -95,10 +101,12 @@ export const activateType = catchAsync(async (req: Request, res: Response): Prom
 
   const type = await TypeService.activateType(typeId);
 
+  const dto = type.toAdminDTO();
+
   return res.status(200).json({
     success: true,
     message: "Type successfully activated.",
-    data: { type: type.toAdminDTO() },
+    data: { type: dto },
   });
 });
 
@@ -110,10 +118,12 @@ export const deactivateType = catchAsync(async (req: Request, res: Response): Pr
 
   const type = await TypeService.deactivateType(typeId);
 
+  const dto = type.toAdminDTO();
+
   return res.status(200).json({
     success: true,
     message: "Type successfully deactivated.",
-    data: { type: type.toAdminDTO() },
+    data: { type: dto },
   });
 });
 
@@ -125,9 +135,11 @@ export const archiveType = catchAsync(async (req: Request, res: Response): Promi
 
   const type = await TypeService.archiveType(typeId);
 
+  const dto = type.toAdminDTO();
+
   return res.status(200).json({
     success: true,
     message: "Type successfully archived.",
-    data: { type: type.toAdminDTO() },
+    data: { type: dto },
   });
 });

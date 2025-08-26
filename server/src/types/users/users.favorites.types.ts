@@ -4,7 +4,7 @@
 
 export interface FavoritePublicDTO {
   id: string;
-  name: string;
+  name: string | null;
   note: string | null;
 }
 

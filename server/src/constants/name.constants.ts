@@ -9,3 +9,11 @@ export const NAME_STATUSES = {
   INACTIVE: "inactive",
   ARCHIVED: "archived",
 } as const;
+
+export const NAME_SORT_FIELDS = ["value", "created_at"] as const;
+
+export const NAME_MIN_LENGTH = 2;
+export const NAME_MAX_LENGTH = 100;
+
+export const MAX_RANDOM_NAMES = 50;
+export const DEFAULT_RANDOM_NAMES = 10;

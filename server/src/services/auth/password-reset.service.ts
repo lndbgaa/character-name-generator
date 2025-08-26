@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 
 import config from "@/config/app.config.js";
-import { sequelize } from "@/database/mysql.js";
+import { sequelize } from "@/database/mysql.database.js";
 import { PasswordResetToken, User } from "@/models/index.js";
 import { generateResetPasswordToken } from "@/utils/auth-token.utils.js";
 import CustomError from "@/utils/CustomError.utils.js";
@@ -44,7 +44,7 @@ class PasswordResetService {
         }
       );
 
-      const newTokenRecord = await generateResetPasswordToken(userId, transaction);
+      const newTokenRecord = await generateResetPasswordToken(userId, { transaction });
 
       return newTokenRecord.token;
     });
@@ -112,7 +112,7 @@ class PasswordResetService {
     const now = dayjs();
 
     await sequelize.transaction(async (transaction) => {
-      await tokenRecord.user!.updatePassword(newPassword, { transaction });
+      await tokenRecord.user!.setPassword(newPassword, { transaction });
 
       await tokenRecord.update({ status: "used", used_at: now }, { transaction });
     });

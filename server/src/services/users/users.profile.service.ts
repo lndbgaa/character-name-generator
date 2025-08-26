@@ -3,7 +3,7 @@ import AuthService from "@/services/auth/auth.service.js";
 import UploadService from "@/services/upload.service.js";
 import UserService from "@/services/users/users.service.js";
 
-import type { UpdateUserData } from "@/types/users/user.types";
+import type { UpdateUserData } from "@/types/users/user.types.js";
 
 class ProfileService {
   /**
@@ -21,7 +21,7 @@ class ProfileService {
       await AuthService.assertUsernameIsUnique(data.username);
     }
 
-    return user.updateProfile(data);
+    return user.setProfile(data);
   }
 
   /**
@@ -35,9 +35,12 @@ class ProfileService {
   public static async updateAvatar(userId: string, file: Express.Multer.File): Promise<{ url: string }> {
     const user = await UserService.findUserById(userId);
 
-    const { secure_url: url } = await UploadService.uploadImage(file, `charnamegen/users/${userId}/profile-picture`);
+    const { secure_url: url } = await UploadService.uploadImage(
+      file,
+      `charnamegen/users/${userId}/profile-picture`
+    );
 
-    await user.updateAvatar(url);
+    await user.setAvatar(url);
 
     return { url };
   }

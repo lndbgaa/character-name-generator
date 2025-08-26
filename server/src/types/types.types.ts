@@ -1,7 +1,12 @@
 import { TYPE_STATUSES } from "@/constants/type.constants.js";
 
 import type { DateTimeParts } from "@/types/common.types.js";
-import type { UniversePublicDTO } from "@/types/universes.types.js";
+import type { GenderLabel } from "@/types/gender.types.js";
+import type { UniverseAdminDTO, UniversePublicDTO } from "@/types/universes.types.js";
+
+/* ===========================
+ *    Constants-based Types
+ * =========================== */
 
 export type TypeStatus = (typeof TYPE_STATUSES)[keyof typeof TYPE_STATUSES];
 
@@ -9,22 +14,26 @@ export type TypeStatus = (typeof TYPE_STATUSES)[keyof typeof TYPE_STATUSES];
  *           DTOs
  * =========================== */
 
-export interface TypePublicDTO {
-  id: number;
-  label: string;
-  displayName: string;
-  description: string | null;
-  iconUrl: string | null;
-  universe: UniversePublicDTO | null;
+export interface TypeColorTheme {
+  primary: string;
+  secondary: string;
 }
 
-export interface TypeAdminDTO {
+export interface TypePublicDTO {
   id: number;
-  label: string;
   displayName: string;
-  description: string | null;
-  iconUrl: string | null;
+  description: string;
+  colorTheme: TypeColorTheme;
+  iconUrl: string;
+  cardImageUrl: string;
+  backgroundImageUrl: string;
   universe: UniversePublicDTO | null;
+  allowedGenders: GenderLabel[];
+}
+
+export interface TypeAdminDTO extends TypePublicDTO {
+  label: string;
+  universe: UniverseAdminDTO | null;
   status: TypeStatus;
   createdAt: DateTimeParts;
   updatedAt: DateTimeParts;
@@ -36,17 +45,23 @@ export interface TypeAdminDTO {
  *     Payloads & Results
  * =========================== */
 
-export interface CreateTypeData {
-  universeId: number;
+export interface CreateTypePayload {
+  universeLabel: string;
   label: string;
   displayName: string;
-  description?: string;
-  iconUrl?: string;
+  description: string;
+  colorTheme: TypeColorTheme;
+  iconUrl: string;
+  cardImageUrl: string;
+  backgroundImageUrl: string;
+  allowedGenderLabels: GenderLabel[];
 }
 
-export interface UpdateTypeData {
-  universeId?: number;
+export interface UpdateTypePayload {
   displayName?: string;
   description?: string;
+  colorTheme?: TypeColorTheme;
   iconUrl?: string;
+  cardImageUrl?: string;
+  backgroundImageUrl?: string;
 }

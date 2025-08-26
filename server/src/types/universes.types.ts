@@ -2,6 +2,10 @@ import { UNIVERSE_STATUSES } from "@/constants/universe.constants.js";
 
 import type { DateTimeParts } from "@/types/common.types.js";
 
+/* ===========================
+ *    Constants-based Types
+ * =========================== */
+
 export type UniverseStatus = (typeof UNIVERSE_STATUSES)[keyof typeof UNIVERSE_STATUSES];
 
 /* ===========================
@@ -34,7 +38,7 @@ export interface UniverseAdminDTO {
 export interface CreateUniverseData {
   label: string;
   displayName: string;
-  description?: string;
+  description: string;
 }
 
 export interface UpdateUniverseData {

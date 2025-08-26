@@ -1,32 +1,31 @@
 import dayjs from "dayjs";
 import { DataTypes, Model } from "sequelize";
 
-import { sequelize } from "@/database/mysql.js";
+import { sequelize } from "@/database/mysql.database.js";
+import CustomError from "@/utils/CustomError.utils.js";
 
 import type { User } from "@/models/index.js";
+import type { AuthRefreshTokenStatus } from "@/types/auth.types.js";
 import type { SaveOptions } from "sequelize";
 
-type RefreshTokenStatus = "active" | "revoked" | "expired";
-
 /**
- * The "RefreshToken" entity represents a long-lived authentication token
+ * The `RefreshToken` entity represents a long-lived authentication token
  * used to renew access tokens without requiring the user to log in again.
  *
  * Fields:
- * - `id`: UUID identifier
- * - `user_id`: foreign key referencing the user who owns the token
- * - `token`: unique secure token string (stored server-side only)
- * - `status`: current lifecycle state ("active", "revoked", "expired")
- * - `expires_at`: timestamp after which the token becomes invalid
- * - `revoked_at`: timestamp when the token was explicitly revoked (nullable)
- * - `created_at`: automatic creation timestamp
- * - `updated_at`: automatic update timestamp
+ * - `user_id`: Foreign key referencing the user who owns the token.
+ * - `token`: Unique secure token string (stored server-side only).
+ * - `status`: Current lifecycle state ("active", "revoked", "expired").
+ * - `expires_at`: Expiration timestamp (token is invalid after this point).
+ * - `revoked_at`: Timestamp of when the token was explicitly revoked (nullable).
+ * - `created_at`: Automatic creation timestamp.
+ * - `updated_at`: Automatic update timestamp.
  */
 export default class RefreshToken extends Model {
   declare id: string;
   declare user_id: string;
   declare token: string;
-  declare status: RefreshTokenStatus;
+  declare status: AuthRefreshTokenStatus;
   declare created_at: Date;
   declare updated_at: Date;
   declare expires_at: Date;
@@ -34,23 +33,40 @@ export default class RefreshToken extends Model {
 
   declare user?: User;
 
+  /**
+   * Checks if the refresh token is active and not expired.
+   *
+   * @returns {boolean} True if status is "active" and the expiration date is in the future.
+   */
   public isValid(): boolean {
     return this.status === "active" && dayjs().isBefore(this.expires_at);
   }
 
+  /**
+   * Marks the refresh token as revoked.
+   *
+   * @param {SaveOptions} [options] - Additional Sequelize save options (e.g., includes).
+   * @returns {Promise<void>}
+   */
   public async markAsRevoked(options?: SaveOptions): Promise<void> {
     if (this.status !== "active") return;
 
     this.status = "revoked";
     this.revoked_at = dayjs().toDate();
-    await this.save(options);
+    await this.save({ ...options, fields: ["status", "revoked_at"] });
   }
 
+  /**
+   * Marks the refresh token as expired.
+   *
+   * @param {SaveOptions} [options] - Additional Sequelize save options (e.g., includes).
+   * @returns {Promise<void>}
+   */
   public async markAsExpired(options?: SaveOptions): Promise<void> {
     if (this.status !== "active" || !dayjs().isAfter(this.expires_at)) return;
 
     this.status = "expired";
-    await this.save(options);
+    await this.save({ ...options, fields: ["status"] });
   }
 }
 
@@ -74,6 +90,7 @@ RefreshToken.init(
     },
     status: {
       type: DataTypes.ENUM("active", "revoked", "expired"),
+      allowNull: false,
       defaultValue: "active",
     },
     expires_at: {
@@ -94,8 +111,8 @@ RefreshToken.init(
     updatedAt: "updated_at",
     indexes: [
       {
-        name: "idx_refresh_status",
-        fields: ["status"],
+        name: "idx_refresh_status_expires",
+        fields: ["status", "expires_at"],
       },
       {
         name: "idx_refresh_user_status",
@@ -105,8 +122,11 @@ RefreshToken.init(
   }
 );
 
-RefreshToken.beforeSave((token: RefreshToken): void => {
+RefreshToken.beforeValidate((token: RefreshToken) => {
   if (token.expires_at <= token.created_at) {
-    throw new Error("expires_at must be after created_at");
+    throw new CustomError({
+      statusCode: 400,
+      message: "`expires_at` must be after `created_at`.",
+    });
   }
 });

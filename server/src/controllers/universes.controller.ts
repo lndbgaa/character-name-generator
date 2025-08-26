@@ -35,7 +35,7 @@ export const getUniverses = catchAsync(async (req: Request, res: Response): Prom
 
   const isAdmin = userRole === "admin";
 
-  const universes = await UniverseService.findAllUniverses({
+  const universes = await UniverseService.findUniverses({
     where: isAdmin ? undefined : { status: "active" },
   });
 
@@ -62,7 +62,7 @@ export const createUniverse = catchAsync(async (req: Request, res: Response): Pr
   return res.status(201).json({
     success: true,
     message: "Universe created successfully.",
-    data: { universe },
+    data: { universe: universe.toAdminDTO() },
   });
 });
 
@@ -82,7 +82,7 @@ export const updateUniverse = catchAsync(async (req: Request, res: Response): Pr
   return res.status(200).json({
     success: true,
     message: "Universe updated successfully.",
-    data: { universe },
+    data: { universe: universe.toAdminDTO() },
   });
 });
 

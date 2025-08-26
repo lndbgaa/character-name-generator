@@ -1,28 +1,21 @@
 import dayjs from "dayjs";
 import { DataTypes, Model } from "sequelize";
 
-import { NAME_LENGTHS, NAME_STATUSES } from "@/constants/name.constants.js";
-import { sequelize } from "@/database/mysql.js";
+import { NAME_LENGTHS, NAME_MAX_LENGTH, NAME_MIN_LENGTH, NAME_STATUSES } from "@/constants/name.constants.js";
+
+import { sequelize } from "@/database/mysql.database.js";
 import CustomError from "@/utils/CustomError.utils.js";
 import { toDateOnly, toTimeOnly } from "@/utils/date.utils.js";
 import setIfChanged from "@/utils/set-if-changed.utils.js";
+import { capitalize } from "@/utils/string.utils.js";
 import { nameRegex } from "@/validators/patterns.js";
 
 import type { Gender, Type } from "@/models/index.js";
-import type {
-  NameAdminDTO,
-  NameLength,
-  NamePublicDTO,
-  NameStatus,
-  UpdateNameData,
-} from "@/types/names.types.js";
+import type { NameAdminDTO, NameLength, NamePublicDTO, NameStatus, UpdateNameFields } from "@/types/names.types.js";
 import type { SaveOptions } from "sequelize";
 
-export const VALUE_MIN = 2;
-export const VALUE_MAX = 100;
-
 /**
- * The "Name" entity represents a character name associated with a specific type and gender.
+ * The `Name` entity represents a character name associated with a specific type and gender.
  *
  * Each name is categorized by:
  * - its type (e.g., Elf, Orc, Greek God, Android)
@@ -32,19 +25,18 @@ export const VALUE_MAX = 100;
  * A given name can exist in multiple types, but it must be unique within the same type.
  *
  *  Fields :
- * - `id`: UUID identifier
- * - `value`: the actual character name (e.g., "Thalor", "Xenara")
- * - `type_id`: foreign key linking to the "Type" model
- * - `gender_id`: foreign key linking to the "Gender" model
- * - `length`: enum defining name size ("short", "medium", "long")
- * - `status` ("active" | "inactive" | "archived"): Lifecycle state of the name
- *     - `active`: name is visible and can be used
- *     - `inactive`: name is hidden but may be reactivated
- *     - `archived`: name is locked and no longer modifiable
- * - `created_at`: automatic creation timestamp
- * - `updated_at`: automatic update timestamp
- * - `deactivated_at`: timestamp when the name was set to inactive (nullable)
- * - `archived_at`: timestamp when the name was archived (nullable)
+ * - `value`: Character name (e.g., "Thalor", "Xenara")
+ * - `type_id`: Foreign key linking to the related `Type` record.
+ * - `gender_id`: Foreign key linking to the related `Gender` record.
+ * - `length`: Enum defining name size ("short", "medium", "long").
+ * - `status` ("active" | "inactive" | "archived"): Lifecycle state of the name.
+ *     - `active`: visible and usable
+ *     - `inactive`: hidden but can be reactivated
+ *     - `archived`: locked, no longer modifiable
+ * - `created_at`: Automatic creation timestamp.
+ * - `updated_at`: Automatic update timestamp.
+ * - `deactivated_at`: When the name was set to inactive (nullable).
+ * - `archived_at`: When the name was archived (nullable).
  */
 export default class Name extends Model {
   declare id: string;
@@ -55,19 +47,25 @@ export default class Name extends Model {
   declare status: NameStatus;
   declare created_at: Date;
   declare updated_at: Date;
-  declare archived_at: Date | null;
   declare deactivated_at: Date | null;
+  declare archived_at: Date | null;
 
   declare type?: Type;
   declare gender?: Gender;
 
   /**
+   * Updates specific fields of the name.
    *
-   * @param data
-   * @param options
-   * @returns
+   * Uses `setIfChanged` to compare current and new values, ensuring that
+   * only fields whose values have actually changed are persisted.
+   *
+   * @param {UpdateNameData} data - The new data to apply.
+   * @param {SaveOptions} [options] - Additional Sequelize save options (e.g., includes).
+   * @returns {Promise<Name>} The updated `Name` instance with its `type` and `gender` relations loaded.
+   * @throws {CustomError} If:
+   *   - No fields were modified (400 No changes detected).
    */
-  public async updateFields(data: UpdateNameData, options?: SaveOptions): Promise<Name> {
+  public async updateFields(data: UpdateNameFields, options?: SaveOptions): Promise<Name> {
     const updatedFields: string[] = [];
 
     if (setIfChanged(this, "value", data.value, false)) {
@@ -85,27 +83,23 @@ export default class Name extends Model {
       });
     }
 
-    await this.save({ ...options, fields: updatedFields });
-
-    return await this.reload({
-      include: [{ association: "type" }, { association: "gender" }],
-      transaction: options?.transaction,
-    });
+    return await this.save({ ...options, fields: updatedFields });
   }
 
   /**
+   * Updates the name's status.
    *
-   * @param newStatus
-   * @param options
-   * @returns
+   * If the new status is the same as the current one, returns the instance
+   * unchanged without saving.
+   *
+   * @param {NameStatus} newStatus - The new status to set (`active`, `inactive`, or `archived`).
+   * @param {SaveOptions} [options] - Additional Sequelize save options (e.g., includes).
+   * @returns {Promise<Name>} The updated `Name` instance with its `type` and `gender` relations loaded.
+   * @throws {CustomError} If:
+   *   - The name is archived and the new status is not `archived` (status cannot be changed once archived).
    */
   public async setStatus(newStatus: NameStatus, options?: SaveOptions): Promise<Name> {
-    if (this.status === newStatus) {
-      return await this.reload({
-        include: [{ association: "type" }, { association: "gender" }],
-        transaction: options?.transaction,
-      });
-    }
+    if (this.status === newStatus) return this;
 
     if (this.status === NAME_STATUSES.ARCHIVED && newStatus !== NAME_STATUSES.ARCHIVED) {
       throw new CustomError({
@@ -136,17 +130,13 @@ export default class Name extends Model {
       }
     }
 
-    await this.save({ ...options, fields: ["status", "deactivated_at", "archived_at"] });
-
-    return await this.reload({
-      include: [{ association: "type" }, { association: "gender" }],
-      transaction: options?.transaction,
-    });
+    return await this.save({ ...options, fields: ["status", "deactivated_at", "archived_at"] });
   }
 
   /**
+   * Converts the `Name` instance to its public data transfer object (DTO).
    *
-   * @returns
+   * @returns {NamePublicDTO} The public representation of the name.
    */
   public toPublicDTO(): NamePublicDTO {
     return {
@@ -159,8 +149,9 @@ export default class Name extends Model {
   }
 
   /**
+   * Converts the `Name` instance to its admin data transfer object (DTO).
    *
-   * @returns
+   * @returns {NameAdminDTO} The admin representation of the name.
    */
   public toAdminDTO(): NameAdminDTO {
     return {
@@ -214,15 +205,15 @@ Name.init(
       defaultValue: DataTypes.UUIDV4,
     },
     value: {
-      type: DataTypes.STRING(VALUE_MAX),
+      type: DataTypes.STRING(NAME_MAX_LENGTH),
       allowNull: false,
       validate: {
         notEmpty: {
           msg: "The name cannot be empty.",
         },
         len: {
-          args: [VALUE_MIN, VALUE_MAX],
-          msg: `The name must be between ${VALUE_MIN} and ${VALUE_MAX} characters long.`,
+          args: [NAME_MIN_LENGTH, NAME_MAX_LENGTH],
+          msg: `The name must be between ${NAME_MIN_LENGTH} and ${NAME_MAX_LENGTH} characters long.`,
         },
         is: {
           args: nameRegex,
@@ -251,11 +242,11 @@ Name.init(
       allowNull: false,
       defaultValue: NAME_STATUSES.ACTIVE,
     },
-    archived_at: {
+    deactivated_at: {
       type: DataTypes.DATE,
       allowNull: true,
     },
-    deactivated_at: {
+    archived_at: {
       type: DataTypes.DATE,
       allowNull: true,
     },
@@ -269,17 +260,25 @@ Name.init(
     updatedAt: "updated_at",
     indexes: [
       {
-        name: "uniq_names_value_type",
+        name: "uniq_names_type_value",
         unique: true,
-        fields: ["value", "type_id"],
+        fields: ["type_id", "value"],
       },
       {
-        name: "idx_names_status",
-        fields: ["status"],
+        name: "idx_names_value",
+        fields: ["value"],
       },
       {
-        name: "idx_names_type",
-        fields: ["type_id"],
+        name: "idx_names_type_status_value",
+        fields: ["type_id", "status", "value"],
+      },
+      {
+        name: "idx_names_gender_status_value",
+        fields: ["gender_id", "status", "value"],
+      },
+      {
+        name: "idx_names_type_gender_status",
+        fields: ["type_id", "gender_id", "status"],
       },
     ],
   }
@@ -290,7 +289,7 @@ Name.beforeValidate((name: Name) => {
     const trimmed = name.value.trim();
 
     if (trimmed.length > 0) {
-      name.value = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+      name.value = capitalize(trimmed);
 
       const length = trimmed.length;
 

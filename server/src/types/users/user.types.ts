@@ -1,15 +1,20 @@
 import {
+  ACCOUNT_ALLOWED_SORT_FIELDS,
+  ACCOUNT_ROLES_DISPLAY,
   ACCOUNT_ROLES_ID,
   ACCOUNT_ROLES_LABEL,
   ACCOUNT_STATUSES,
-  USER_ALLOWED_SORT_FIELDS,
 } from "@/constants/user.constants.js";
 
+/* ===========================
+ *    Constants-based Types
+ * =========================== */
+
 export type AccountRoleId = (typeof ACCOUNT_ROLES_ID)[keyof typeof ACCOUNT_ROLES_ID];
-
 export type AccountRoleLabel = (typeof ACCOUNT_ROLES_LABEL)[keyof typeof ACCOUNT_ROLES_LABEL];
-
+export type AccountRoleDisplay = (typeof ACCOUNT_ROLES_DISPLAY)[keyof typeof ACCOUNT_ROLES_DISPLAY];
 export type AccountStatus = (typeof ACCOUNT_STATUSES)[keyof typeof ACCOUNT_STATUSES];
+export type AccountAllowedSort = (typeof ACCOUNT_ALLOWED_SORT_FIELDS)[number];
 
 /* ===========================
  *           DTOs
@@ -52,22 +57,29 @@ export interface UpdateUserData {
 }
 
 /* ===========================
- *          Filters
+ *          Queries
+ * =========================== */
+export interface GetUsersQuery {
+  search?: string;
+  role?: AccountRoleLabel;
+  status?: AccountStatus;
+  sortBy?: AccountAllowedSort;
+  sortDir?: "asc" | "desc";
+  page?: string;
+  limit?: string;
+}
+
+/* ===========================
+ *      Filters & Sorting
  * =========================== */
 
 export interface GetUsersFilters {
   search?: string;
-  roleId?: number;
+  role?: AccountRoleLabel;
   status?: AccountStatus;
 }
 
-/* ===========================
- *         Sort
- * =========================== */
-
-export type UserAllowedSort = (typeof USER_ALLOWED_SORT_FIELDS)[number];
-
 export interface GetUserSortOptions {
-  sort: UserAllowedSort;
+  sort: AccountAllowedSort;
   dir: "ASC" | "DESC";
 }

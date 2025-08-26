@@ -1,11 +1,16 @@
-import { NAME_LENGTHS, NAME_STATUSES } from "@/constants/name.constants.js";
+import { NAME_LENGTHS, NAME_SORT_FIELDS, NAME_STATUSES } from "@/constants/name.constants.js";
 
 import type { Name } from "@/models/index.js";
 import type { DateTimeParts } from "@/types/common.types.js";
+import type { GenderId, GenderLabel } from "@/types/gender.types.js";
+
+/* ===========================
+ *    Constants-based Types
+ * =========================== */
 
 export type NameLength = (typeof NAME_LENGTHS)[keyof typeof NAME_LENGTHS];
-
 export type NameStatus = (typeof NAME_STATUSES)[keyof typeof NAME_STATUSES];
+export type NamesAllowedSort = (typeof NAME_SORT_FIELDS)[number];
 
 /* ===========================
  *           DTOs
@@ -36,10 +41,10 @@ export interface NameAdminDTO {
  *     Payloads & Results
  * =========================== */
 
-export interface CreateNameData {
+export interface CreateNamePayload {
   value: string;
-  typeId: number;
-  genderId: number;
+  typeLabel: string;
+  genderLabel: GenderLabel;
 }
 
 export type BulkNameResult = {
@@ -48,27 +53,62 @@ export type BulkNameResult = {
   failed: { value: string; reason: string }[];
 };
 
-export interface UpdateNameData {
+export interface UpdateNamePayload {
+  value?: string;
+  typeLabel?: string;
+  genderLabel?: GenderLabel;
+}
+
+export interface UpdateNameFields {
   value?: string;
   typeId?: number;
-  genderId?: number;
+  genderId?: GenderId;
 }
 
 /* ===========================
- *          Filters
+ *           Queries
  * =========================== */
 
-export interface GetNameFilters {
+export interface GetNamesQuery {
   search?: string;
-  typeId?: number;
-  genderId?: number;
+  typeLabel?: string;
+  genderLabel?: GenderLabel;
+  charLength?: number;
+  length?: NameLength;
+  status?: NameStatus;
+  sortBy?: NamesAllowedSort;
+  sortDir?: "asc" | "desc";
+  page?: string;
+  limit?: string;
+}
+
+export interface GenerateRandomNamesQuery {
+  size?: string;
+  genderLabel?: GenderLabel;
+  length?: NameLength;
+  charLength?: number;
+}
+
+/* ===========================
+ *      Filters & Sorting
+ * =========================== */
+
+export interface GetNamesFilters {
+  search?: string;
+  typeLabel?: string;
+  genderLabel?: GenderLabel;
   charLength?: number;
   length?: NameLength;
   status?: NameStatus;
 }
 
-export interface GenerateNameFilters {
-  genderId?: number;
+export interface GetNamesSortOptions {
+  sort: NamesAllowedSort;
+  dir: "ASC" | "DESC";
+}
+
+export interface GenerateNamesFilters {
+  genderLabel?: GenderLabel;
   charLength?: number;
   length?: NameLength;
 }

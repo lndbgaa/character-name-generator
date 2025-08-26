@@ -1,3 +1,5 @@
+import { DEFAULT_RANDOM_NAMES, MAX_RANDOM_NAMES } from "@/constants/name.constants.js";
+
 import NameService from "@/services/names.service.js";
 import catchAsync from "@/utils/catch-async.utils.js";
 import CustomError from "@/utils/CustomError.utils.js";
@@ -5,12 +7,13 @@ import parsePagination from "@/utils/parse-pagination.utils.js";
 
 import type { MulterRequest } from "@/types/config.types.js";
 import type {
-  CreateNameData,
-  GenerateNameFilters,
-  GetNameFilters,
-  NameLength,
-  NameStatus,
-  UpdateNameData,
+  CreateNamePayload,
+  GenerateNamesFilters,
+  GenerateRandomNamesQuery,
+  GetNamesFilters,
+  GetNamesQuery,
+  GetNamesSortOptions,
+  UpdateNamePayload,
 } from "@/types/names.types.js";
 import type { Request, Response } from "express";
 
@@ -25,9 +28,7 @@ export const getName = catchAsync(async (req: Request, res: Response): Promise<R
   const { id: nameId } = req.params;
   const userRole = req.user?.role;
 
-  const name = await NameService.findNameById(nameId, {
-    include: [{ association: "type" }, { association: "gender" }],
-  });
+  const name = await NameService.findNameById(nameId);
 
   return res.status(200).json({
     success: true,
@@ -38,23 +39,22 @@ export const getName = catchAsync(async (req: Request, res: Response): Promise<R
 });
 
 /**
- * Retrieves a paginated list of names with optional filters (search, type, gender, status...).
+ * Retrieves a paginated list of names, optionally filtered and sorted by given criteria.
  */
 export const getNames = catchAsync(async (req: Request, res: Response): Promise<Response> => {
-  const { search, typeId, genderId, length, charLength, status } = req.query;
+  const { search, typeLabel, genderLabel, length, charLength, status, sortBy, sortDir }: GetNamesQuery =
+    req.query;
 
-  const filters: GetNameFilters = {
-    search: typeof search === "string" ? search.trim() : undefined,
-    typeId: typeId ? Number(typeId) : undefined,
-    genderId: genderId ? Number(genderId) : undefined,
-    charLength: charLength ? Number(charLength) : undefined,
-    length: length as NameLength | undefined,
-    status: status as NameStatus | undefined,
+  const filters: GetNamesFilters = { search, typeLabel, genderLabel, charLength, length, status };
+
+  const sortOptions: GetNamesSortOptions = {
+    sort: sortBy ?? "created_at",
+    dir: sortDir === "asc" ? "ASC" : "DESC",
   };
 
   const { limit, offset, page } = parsePagination(req);
 
-  const { count, names } = await NameService.getNames(limit, offset, filters);
+  const { count, names } = await NameService.findNames(limit, offset, sortOptions, filters);
 
   const totalPages = Math.ceil(count / limit);
 
@@ -83,17 +83,13 @@ export const generateRandomNamesByType = catchAsync(
   async (req: Request, res: Response): Promise<Response> => {
     const typeId = Number(req.params.id);
 
-    const { count = "10", genderId, length, charLength } = req.query;
+    const { size, genderLabel, length, charLength }: GenerateRandomNamesQuery = req.query;
 
-    const filters: GenerateNameFilters = {
-      genderId: genderId ? Number(genderId) : undefined,
-      charLength: charLength ? Number(charLength) : undefined,
-      length: length as NameLength | undefined,
-    };
+    const filters: GenerateNamesFilters = { genderLabel, charLength, length };
 
-    const limit = Math.min(Math.max(Number(count) || 10, 1), 50);
+    const parsedSize = Math.min(Math.max(Number(size) || DEFAULT_RANDOM_NAMES, 1), MAX_RANDOM_NAMES);
 
-    const names = await NameService.generateRandomNamesFromType(typeId, limit, filters);
+    const names = await NameService.generateRandomNamesFromType(typeId, parsedSize, filters);
 
     const dtos = names.map((n) => n.toPublicDTO());
 
@@ -115,7 +111,7 @@ export const generateRandomNamesByType = catchAsync(
  * Creates a new character name from the provided data.
  */
 export const createName = catchAsync(async (req: Request, res: Response): Promise<Response> => {
-  const data: CreateNameData = req.body;
+  const data: CreateNamePayload = req.body;
 
   const name = await NameService.createName(data);
 
@@ -130,7 +126,7 @@ export const createName = catchAsync(async (req: Request, res: Response): Promis
  * Creates multiple names from a JSON array.
  */
 export const bulkCreateNames = catchAsync(async (req: Request, res: Response): Promise<Response> => {
-  const data: CreateNameData[] = req.body;
+  const data: CreateNamePayload[] = req.body;
 
   const { created, skipped, failed } = await NameService.validateAndCreateNames(data);
 
@@ -200,7 +196,7 @@ export const importNamesFromFile = catchAsync(
  */
 export const updateName = catchAsync(async (req: Request, res: Response): Promise<Response> => {
   const { id: nameId } = req.params;
-  const data: UpdateNameData = req.body;
+  const data: UpdateNamePayload = req.body;
 
   const name = await NameService.updateName(nameId, data);
 

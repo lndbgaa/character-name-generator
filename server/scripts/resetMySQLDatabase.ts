@@ -14,6 +14,7 @@ const resetDB = async (): Promise<void> => {
     path.resolve(__dirname, "../sql/seeds/seed_universes.sql"),
     path.resolve(__dirname, "../sql/seeds/seed_types.sql"),
     path.resolve(__dirname, "../sql/seeds/seed_genders.sql"),
+    path.resolve(__dirname, "../sql/seeds/seed_type_allowed_genders.sql"),
     path.resolve(__dirname, "../sql/seeds/seed_names.sql"),
   ];
 

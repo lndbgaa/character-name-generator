@@ -1,32 +1,31 @@
 import dayjs from "dayjs";
 import { DataTypes, Model } from "sequelize";
 
-import { sequelize } from "@/database/mysql.js";
+import { sequelize } from "@/database/mysql.database.js";
+import CustomError from "@/utils/CustomError.utils.js";
 
 import type { User } from "@/models/index.js";
+import type { PwdResetTokenStatus } from "@/types/auth.types.js";
 import type { SaveOptions } from "sequelize";
 
-type PasswordResetTokenStatus = "active" | "used" | "expired";
-
 /**
- * The "PasswordResetToken" entity represents a time-limited token
+ * The `PasswordResetToken` entity represents a time-limited token
  * used to allow a user to reset their password securely.
  *
  *  Fields:
- * - `id`: UUID identifier
- * - `user_id`: foreign key referencing the user who requested the reset
- * - `token`: secure unique string used for verification
- * - `status`: current status of the token ("active", "used", "expired")
- * - `expires_at`: expiration timestamp (token is invalid after this point)
- * - `used_at`: timestamp of when the token was used (null if unused)
- * - `created_at`: automatic creation timestamp
- * - `updated_at`: automatic update timestamp
+ * - `user_id`: Foreign key referencing the user who requested the reset.
+ * - `token`: Secure unique string used for verification.
+ * - `status`: Current status of the token ("active", "used", "expired").
+ * - `expires_at`: Expiration timestamp (token is invalid after this point).
+ * - `used_at`: Timestamp of when the token was explicitly used (nullable).
+ * - `created_at`: Automatic creation timestamp.
+ * - `updated_at`: Automatic update timestamp.
  */
 export default class PasswordResetToken extends Model {
   declare id: string;
   declare user_id: string;
   declare token: string;
-  declare status: PasswordResetTokenStatus;
+  declare status: PwdResetTokenStatus;
   declare created_at: Date;
   declare updated_at: Date;
   declare expires_at: Date;
@@ -34,23 +33,40 @@ export default class PasswordResetToken extends Model {
 
   declare user?: User;
 
+  /**
+   * Checks if the reset token is active and not expired.
+   *
+   * @returns {boolean} True if status is "active" and the expiration date is in the future.
+   */
   public isValid(): boolean {
     return this.status === "active" && dayjs().isBefore(this.expires_at);
   }
 
+  /**
+   * Marks the reset token as used.
+   *
+   * @param {SaveOptions} [options] - Additional Sequelize save options (e.g., includes).
+   * @returns {Promise<void>}
+   */
   public async markAsUsed(options?: SaveOptions): Promise<void> {
     if (this.status !== "active") return;
 
     this.status = "used";
     this.used_at = dayjs().toDate();
-    await this.save(options);
+    await this.save({ ...options, fields: ["status", "used_at"] });
   }
 
+  /**
+   * Marks the reset token as expired.
+   *
+   * @param {SaveOptions} [options] - Additional Sequelize save options (e.g., includes).
+   * @returns {Promise<void>}
+   */
   public async markAsExpired(options?: SaveOptions): Promise<void> {
     if (this.status !== "active" || !dayjs().isAfter(this.expires_at)) return;
 
     this.status = "expired";
-    await this.save(options);
+    await this.save({ ...options, fields: ["status"] });
   }
 }
 
@@ -74,6 +90,7 @@ PasswordResetToken.init(
     },
     status: {
       type: DataTypes.ENUM("active", "used", "expired"),
+      allowNull: false,
       defaultValue: "active",
     },
     expires_at: {
@@ -94,8 +111,8 @@ PasswordResetToken.init(
     updatedAt: "updated_at",
     indexes: [
       {
-        name: "idx_reset_status",
-        fields: ["status"],
+        name: "idx_reset_status_expires",
+        fields: ["status", "expires_at"],
       },
       {
         name: "idx_reset_user_status",
@@ -105,8 +122,11 @@ PasswordResetToken.init(
   }
 );
 
-PasswordResetToken.beforeSave((token: PasswordResetToken): void => {
+PasswordResetToken.beforeValidate((token: PasswordResetToken) => {
   if (token.expires_at <= token.created_at) {
-    throw new Error("expires_at must be after created_at");
+    throw new CustomError({
+      statusCode: 400,
+      message: "`expires_at` must be after `created_at`.",
+    });
   }
 });

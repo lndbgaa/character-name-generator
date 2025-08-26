@@ -1,19 +1,116 @@
-INSERT INTO types (universe_id, label, display_name, description) VALUES 
-(1, 'elf', 'Elf', 'Silent guardians of ancient groves, moving gracefully between light and shadow.'),
-(1, 'human', 'Human', 'Mortal souls forged by will, shaped by both hope and despair, bearers of unpredictable fates.'),
-(1, 'dragon', 'Dragon', 'Beings of fire and ash, wings that blaze trails through the ages.'),
-(1, 'orc', 'Orc', 'Fierce warriors with unyielding spirits, born from the wild chaos of the battlefield.'),
-(1, 'fairy', 'Fairy', 'Sparkling spirits of mischief, masters of fleeting games and enchantments.'),
-(1, 'angel', 'Angel', 'Luminous sentinels of the skies, their wings bearing the dreams and faith of the righteous.'),
-(1, 'vampire', 'Vampire', 'Elegant shadows cloaked in night, lips delivering a sweet, eternal poison.'),
-(1, 'demon', 'Demon', 'Embodiment of chaos, seductive and destructive, whisperer of forbidden temptations.'),
-(1, 'wizard', 'Wizard', 'Architects of arcane, weavers of realities and masters of magical breath.'),
-(1, 'witch', 'Witch', 'Sisters of the moon, weaving shadows and spells scented with ancient lore.'),
-(1, 'siren', 'Siren', 'Voices of foam and mystery, luring lost souls toward singing abysses.'),
-(1, 'goblin', 'Goblin',  'Cunning and nimble tricksters thriving in shadows and forgotten places.'),
-(1, 'harpy', 'Harpy', 'Winged hunters of the storm, their cries echo like thunder across desolate skies.'),
-(1, 'werewolf', 'Werewolf', 'Wild spirits caught between two natures, their howls tear through the lunar night.'),
-(1, 'pirate', 'Pirate', 'Free sailors breaking the chains of kingdoms, masters of waves and legends.')
+INSERT INTO types 
+  (universe_id, label, display_name, description, color_theme, icon_url, card_image_url, background_image_url) 
+VALUES 
+  (1, 'elf', 'Elf', 
+   'Silent guardians of ancient groves, moving gracefully between light and shadow.', 
+   JSON_OBJECT('primary', '#8b8e39', 'secondary', '#afb347'),
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg"),
+
+  (1, 'human', 'Human', 
+   'Mortal souls forged by will, shaped by both hope and despair, bearers of unpredictable fates.', 
+   JSON_OBJECT('primary', '#424b52', 'secondary', '#59656e'),
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg"),
+
+  (1, 'dragon', 'Dragon', 
+   'Beings of fire and ash, wings that blaze trails through the ages.', 
+   JSON_OBJECT('primary', '#307d82', 'secondary', '#3ea0a8'),
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg"),
+
+  (1, 'orc', 'Orc', 
+   'Fierce warriors with unyielding spirits, born from the wild chaos of the battlefield.', 
+   JSON_OBJECT('primary', '#4b5d3b', 'secondary', '#6e8b52'),
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg"),
+
+  (1, 'fairy', 'Fairy', 
+   'Sparkling spirits of mischief, masters of fleeting games and enchantments.', 
+   JSON_OBJECT('primary', '#6a1b9a', 'secondary', '#8e24aa'),
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg"),
+
+  (1, 'angel', 'Angel', 
+   'Luminous sentinels of the skies, their wings bearing the dreams and faith of the righteous.', 
+   JSON_OBJECT('primary', '#5e8a9d', 'secondary', '#87b3c5'),
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg"),
+
+  (1, 'vampire', 'Vampire', 
+   'Elegant shadows cloaked in night, lips delivering a sweet, eternal poison.', 
+   JSON_OBJECT('primary', '#720a08', 'secondary', '#d2120f'),
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg"),
+
+  (1, 'demon', 'Demon', 
+   'Embodiment of chaos, seductive and destructive, whisperer of forbidden temptations.', 
+   JSON_OBJECT('primary', '#fe9e20', 'secondary', '#feb452'),
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg"),
+
+  (1, 'wizard', 'Wizard', 
+   'Architects of arcane, weavers of realities and masters of magical breath.', 
+   JSON_OBJECT('primary', '#283593', 'secondary', '#5c6bc0'),
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg"),
+
+  (1, 'witch', 'Witch', 
+   'Sisters of the moon, weaving shadows and spells scented with ancient lore.', 
+   JSON_OBJECT('primary', '#483d57', 'secondary', '#796693'),
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg"),
+
+  (1, 'siren', 'Siren', 
+   'Voices of foam and mystery, luring lost souls toward singing abysses.', 
+   JSON_OBJECT('primary', '#4f8c92', 'secondary', '#88babf'),
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg"),
+
+  (1, 'goblin', 'Goblin',  
+   'Cunning and nimble tricksters thriving in shadows and forgotten places.', 
+   JSON_OBJECT('primary', '#33691e', 'secondary', '#689f38'),
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg"),
+
+  (1, 'harpy', 'Harpy', 
+   'Winged hunters of the storm, their cries echo like thunder across desolate skies.', 
+   JSON_OBJECT('primary', '#2d1759', 'secondary', '#562caa'),
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg"),
+
+  (1, 'werewolf', 'Werewolf', 
+   'Wild spirits caught between two natures, their howls tear through the lunar night.', 
+   JSON_OBJECT('primary', '#37474f', 'secondary', '#78909c'),
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg"),
+
+  (1, 'pirate', 'Pirate', 
+   'Free sailors breaking the chains of kingdoms, masters of waves and legends.', 
+   JSON_OBJECT('primary', '#0d47a1', 'secondary', '#1976d2'),
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg",
+   "https://res.cloudinary.com/dmtmk4jeu/image/upload/v1755771308/rasmus-smedstrup-mortensen-_ZtPsxAomeI-unsplash_yuu9bv.jpg")
+
 ON DUPLICATE KEY UPDATE
   display_name = VALUES(display_name),
-  description = VALUES(description);
+  description = VALUES(description),
+  color_theme = VALUES(color_theme),
+  icon_url = VALUES(icon_url),
+  card_image_url = VALUES(card_image_url),
+  background_image_url = VALUES(background_image_url);
+

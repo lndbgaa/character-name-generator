@@ -1,99 +1,137 @@
 import Joi from "joi";
 
-import { VALUE_MAX, VALUE_MIN } from "@/models/Name.model.js";
-import { genderIdSchema } from "@/validators/gender.schema.js";
+import {
+  DEFAULT_RANDOM_NAMES,
+  MAX_RANDOM_NAMES,
+  NAME_LENGTHS,
+  NAME_MAX_LENGTH,
+  NAME_MIN_LENGTH,
+  NAME_SORT_FIELDS,
+  NAME_STATUSES,
+} from "@/constants/name.constants.js";
+
+import { limitQuerySchema, pageQuerySchema } from "@/validators/common.schema.js";
+import { genderLabelSchema } from "@/validators/gender.schema.js";
 import { nameRegex } from "@/validators/patterns.js";
-import { typeIdSchema } from "@/validators/type.schema.js";
+import { typeLabelSchema } from "@/validators/type.schema.js";
 
 const valueField = Joi.string()
   .trim()
-  .min(VALUE_MIN)
-  .max(VALUE_MAX)
+  .min(NAME_MIN_LENGTH)
+  .max(NAME_MAX_LENGTH)
   .pattern(nameRegex)
   .required()
   .messages({
-    "any.required": `The name value field is required.`,
-    "string.base": `The name value must be a string.`,
-    "string.empty": `The name value cannot be empty.`,
-    "string.min": `The name value must have at least ${VALUE_MIN} characters.`,
-    "string.max": `The name value must not exceed ${VALUE_MAX} characters.`,
-    "string.pattern.base": `The name value must start with a letter and may only contain letters, spaces, hyphens (-), or apostrophes (’ or ').`,
+    "string.base": "Name value must be a string.",
+    "string.empty": "Name value must be a non-empty string.",
+    "string.min": `Name value must be at least ${NAME_MIN_LENGTH} characters long.`,
+    "string.max": `Name value must not exceed ${NAME_MAX_LENGTH} characters.`,
+    "string.pattern.base":
+      "Name value must start with a letter and may only contain letters, spaces, hyphens (-), or apostrophes (’ or ').",
+    "any.required": "A name value is required.",
   });
 
 const lengthField = Joi.string()
   .lowercase()
-  .valid("short", "medium", "long")
+  .valid(...Object.values(NAME_LENGTHS))
   .optional()
   .messages({
-    "string.base": `The length must be a string.`,
-    "any.only": `The length must be one of: "short", "medium", or "long".`,
+    "string.base": "Length must be a string.",
+    "string.empty": "Length must be a non-empty string.",
+    "any.only": `Length must be one of the following values: ${Object.values(NAME_LENGTHS).join(", ")}.`,
   });
 
 const charLengthField = Joi.number()
   .integer()
   .positive()
-  .max(VALUE_MAX)
+  .max(NAME_MAX_LENGTH)
   .optional()
   .messages({
-    "number.base": `The character length must be a number.`,
-    "number.integer": `The character length must be an integer.`,
-    "number.positive": `The character length must be a positive number.`,
-    "number.max": `The character length must not exceed ${VALUE_MAX}.`,
+    "number.base": "Character length must be a number.",
+    "number.integer": "Character length must be an integer.",
+    "number.positive": "Character length must be a positive number.",
+    "number.max": `Character length must not exceed ${NAME_MAX_LENGTH}.`,
   });
 
-export const createNameSchema = Joi.object({
-  value: valueField,
-  typeId: typeIdSchema,
-  genderId: genderIdSchema,
+export const createNameBodySchema = Joi.object({
+  value: valueField.required(),
+  typeLabel: typeLabelSchema.required(),
+  genderLabel: genderLabelSchema.required(),
 });
 
-export const updateNameSchema = Joi.object({
+export const updateNameBodySchema = Joi.object({
   value: valueField.optional(),
-  typeId: typeIdSchema.optional(),
-  genderId: genderIdSchema.optional(),
+  typeLabel: typeLabelSchema.optional(),
+  genderLabel: genderLabelSchema.optional(),
 });
 
-export const getNamesSchema = Joi.object({
-  search: Joi.string().trim().min(1).optional().messages({
-    "string.base": `The search query must be a string.`,
-    "string.empty": `The search query cannot be empty.`,
-    "string.min": `The search query must contain at least 1 character.`,
+export const getNamesQuerySchema = Joi.object({
+  page: pageQuerySchema,
+
+  limit: limitQuerySchema,
+
+  search: Joi.string().trim().optional().messages({
+    "string.base": "Search query must be a string.",
+    "string.empty": "Search query must be a non-empty string.",
   }),
-  typeId: typeIdSchema.optional(),
-  genderId: genderIdSchema.optional(),
-  length: lengthField,
-  charLength: charLengthField,
+
+  typeLabel: typeLabelSchema.optional(),
+
+  genderLabel: genderLabelSchema.optional(),
+
+  length: lengthField.optional(),
+
+  charLength: charLengthField.optional(),
+
   status: Joi.string()
-    .valid("active", "inactive", "archived")
+    .lowercase()
+    .valid(...Object.values(NAME_STATUSES))
     .optional()
     .messages({
-      "string.base": `The status must be a string.`,
-      "any.only": `The status must be one of: "active", "inactive", or "archived".`,
+      "string.base": "Status must be a string.",
+      "any.only": `Status must be one of the following values: ${Object.values(NAME_STATUSES).join(", ")}.`,
     }),
+
+  sortBy: Joi.string()
+    .lowercase()
+    .valid(...NAME_SORT_FIELDS)
+    .default("created_at")
+    .messages({
+      "string.base": "SortBy must be a string.",
+      "any.only": `SortBy must be one of the following fields: ${NAME_SORT_FIELDS.join(", ")}.`,
+    }),
+
+  sortDir: Joi.string().lowercase().valid("asc", "desc").default("desc").messages({
+    "string.base": "SortDir must be a string.",
+    "any.only": "SortDir must be either 'asc' or 'desc'.",
+  }),
 })
   .oxor("length", "charLength")
   .messages({
-    "object.oxor": `You must provide either "length" or "charLength", not both.`,
+    "object.oxor": 'You must provide either "length" or "charLength", not both.',
   });
 
-export const generateRandomNamesByTypeSchema = Joi.object({
-  count: Joi.number()
+export const generateRandomNamesByTypeQuerySchema = Joi.object({
+  size: Joi.number()
     .integer()
     .positive()
-    .max(50)
-    .default(10)
+    .max(MAX_RANDOM_NAMES)
+    .default(DEFAULT_RANDOM_NAMES)
     .optional()
     .messages({
-      "number.base": `The count must be a number.`,
-      "number.integer": `The count must be an integer.`,
-      "number.positive": `The count must be a positive number.`,
-      "number.max": `The count must not exceed 50.`,
+      "number.base": "Sizet must be a number.",
+      "number.integer": "Size must be an integer.",
+      "number.positive": "Size must be a positive number.",
+      "number.max": `Size must not exceed ${MAX_RANDOM_NAMES}.`,
     }),
-  genderId: genderIdSchema.optional(),
-  length: lengthField,
-  charLength: charLengthField,
+
+  genderLabel: genderLabelSchema.optional(),
+
+  length: lengthField.optional(),
+
+  charLength: charLengthField.optional(),
 })
   .oxor("length", "charLength")
   .messages({
-    "object.oxor": `You must provide either "length" or "charLength", not both.`,
+    "object.oxor": 'You must provide either "length" or "charLength", not both.',
   });

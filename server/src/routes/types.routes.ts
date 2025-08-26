@@ -4,7 +4,7 @@ import optionalAuth from "@/middlewares/optional-auth.middleware.js";
 import validate from "@/middlewares/validate-all.middleware.js";
 
 import { idIntParamSchema } from "@/validators/common.schema.js";
-import { generateRandomNamesByTypeSchema } from "@/validators/name.schema.js";
+import { generateRandomNamesByTypeQuerySchema } from "@/validators/name.schema.js";
 import { getAllTypesSchema } from "@/validators/type.schema.js";
 
 import { generateRandomNamesByType } from "@/controllers/names.controller.js";
@@ -18,9 +18,8 @@ router.get("/:id", optionalAuth, validate(idIntParamSchema, "params"), getType);
 
 router.get(
   "/:id/names/random",
-  optionalAuth,
   validate(idIntParamSchema, "params"),
-  validate(generateRandomNamesByTypeSchema, "query"),
+  validate(generateRandomNamesByTypeQuerySchema, "query"),
   generateRandomNamesByType
 );
 

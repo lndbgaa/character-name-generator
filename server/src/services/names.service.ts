@@ -1,40 +1,49 @@
 import { col, fn, Op, Sequelize, where as whereFn } from "sequelize";
 
+import { DEFAULT_RANDOM_NAMES, NAME_LENGTHS, NAME_STATUSES } from "@/constants/name.constants.js";
+
 import { Favorite, Name } from "@/models/index.js";
 import GenderService from "@/services/genders.service.js";
 import TypeService from "@/services/types.service.js";
 import CustomError from "@/utils/CustomError.utils.js";
-import { createNameSchema } from "@/validators/name.schema.js";
+import { capitalize, escapeLike } from "@/utils/string.utils.js";
+import { createNameBodySchema } from "@/validators/name.schema.js";
 
 import type {
   BulkNameResult,
-  CreateNameData,
-  GenerateNameFilters,
-  GetNameFilters,
-  UpdateNameData,
+  CreateNamePayload,
+  GenerateNamesFilters,
+  GetNamesFilters,
+  GetNamesSortOptions,
+  NameLength,
+  UpdateNamePayload,
 } from "@/types/names.types.js";
 import type { FlexibleWhere } from "@/types/sequelize.types.js";
 import type { FindOptions, WhereOptions } from "sequelize";
 
 class NameService {
+  private static readonly defaultIncludes = [{ association: "type" }, { association: "gender" }];
+
   /**
    * Retrieves a name by its unique ID.
-
+   *
    * @param {string} id - The unique ID of the name to retrieve.
-   * @param {FindOptions} [options] - Additional Sequelize find options (e.g., includes).
+   * @param {FindOptions<Name>} [options] - Additional Sequelize find options (e.g., includes).
    * @returns {Promise<Name>} The found `Name` instance.
-   * @throws {CustomError} If:
-   *   - No name is found with the provided ID.
+   * @throws {CustomError} If no name is found with the provided ID (404 Not Found).
    */
-  public static async findNameById(id: string, options?: FindOptions): Promise<Name> {
-    const mergedWhere: WhereOptions = {
-      ...(options?.where ?? {}),
-      id,
-    };
+  public static async findNameById(id: string, options?: FindOptions<Name>): Promise<Name> {
+    const where: WhereOptions = { ...(options?.where ?? {}), id };
+
+    const include = [
+      ...this.defaultIncludes,
+      ...(Array.isArray(options?.include) ? options.include : options?.include ? [options.include] : []),
+    ];
 
     const name = await Name.findOne({
       ...options,
-      where: mergedWhere,
+      where,
+      include,
     });
 
     if (!name) {
@@ -49,70 +58,93 @@ class NameService {
   }
 
   /**
+   *  Retrieves a paginated list of names with optional filters and sorting.
    *
-   * @param limit
-   * @param offset
-   * @param {NameFilters} [filters] - Optional filters to apply:
-   *   - `search`: Partial name to search for (prefix match, case-insensitive).
-   *   - `typeId`: Filter by associated type ID.
-   *   - `genderId`: Filter by associated gender ID.
-   *   - `length`: Filter by name length category (`short`, `medium`, `long`).
-   *   - `charLength`: Filter by the exact number of characters in the name value.
-   *   - `status`: Filter by name status (`active`, `inactive`, `archived`).
+   * @param {number} limit
+   * @param {number} offset
+   * @param {GetNamesSortOptions} [orderOpts] - Sorting options:
+   *   - `sort` → Field to sort by (default: "created_at").
+   *   - `dir` → Direction ("ASC" | "DESC", default: "DESC").
+   * @param {GetNamesFilters} [filters] - Optional filters:
+   *   - `search` → Case-insensitive substring search on value.
+   *   - `typeLabel` → Filter by type (vampire, elf, dragon..).
+   *   - `genderLabel` → Filter by gender (male, female, neutral).
+   *   - `length` → Filter by name length category (short, long, medium).
+   *   - `charLength` → Filter by exact character count.
+   *   - `status` → Filter by status (active, inactive, archived).
+   * @param {FindOptions<Name>} [options] - Additional Sequelize find options (e.g., includes).
    * @returns {Promise<{ count: number; names: Name[] }>} An object containing:
-   *   - `count`: Total number of matching names.
-   *   - `names`: Array of matching `Name` instances.
-   * @throws {CustomError} If:
-   *   - Provided `typeId` or `genderId` do not exist (404 Not Found)
+   *   - `count` → Total number of matching names.
+   *   - `names` → Array of `Name` entities for the current page.
+   * @throws {CustomError} If provided `typeLabel` or `genderLabel` filter do not exist (404 Not Found).
    */
-  public static async getNames(
+  public static async findNames(
     limit: number,
     offset: number,
-    filters?: GetNameFilters
+    orderOpts?: GetNamesSortOptions,
+    filters?: GetNamesFilters,
+    options?: FindOptions<Name>
   ): Promise<{ count: number; names: Name[] }> {
-    let where: FlexibleWhere<Name> = {};
+    let where: FlexibleWhere<Name> = { ...(options?.where ?? {}) };
+
+    // FIXME improve typing
 
     if (filters) {
-      const { search, typeId, genderId, length, charLength, status } = filters;
+      const { search, typeLabel, genderLabel, length, charLength, status } = filters;
 
-      if (search) {
-        where[Op.and] = [
-          ...(where[Op.and] ?? []),
-          Sequelize.where(fn("LOWER", col("value")), { [Op.like]: `${search.toLowerCase()}%` }),
-        ];
+      if (typeLabel) {
+        const typeRecord = await TypeService.findTypeByLabel(typeLabel);
+        (where as any).type_id = typeRecord.id;
       }
 
-      if (typeId) {
-        await TypeService.findTypeById(typeId);
-        where.type_id = typeId;
-      }
-
-      if (genderId) {
-        await GenderService.findGenderById(genderId);
-        where.gender_id = genderId;
+      if (genderLabel) {
+        const gender = await GenderService.findGenderByLabel(genderLabel);
+        (where as any).gender_id = gender.id;
       }
 
       if (length) {
-        where.length = length;
-      }
-
-      if (charLength) {
-        where[Op.and] = [
-          ...(where[Op.and] ?? []),
-          whereFn(fn("CHAR_LENGTH", col("value")), { [Op.eq]: charLength }),
-        ];
+        (where as any).length = length;
       }
 
       if (status) {
-        where.status = status;
+        (where as any).status = status;
+      }
+
+      if (charLength) {
+        where[Op.and] = [...(where[Op.and] ?? []), whereFn(fn("CHAR_LENGTH", col("value")), { [Op.eq]: charLength })];
+      }
+
+      if (search && search.length > 0) {
+        let trimmed = search.trim();
+
+        if (trimmed.length > 100) trimmed = trimmed.slice(0, 100);
+
+        const safe = escapeLike(trimmed);
+        const term = `${safe}%`;
+
+        where[Op.and] = [...(where[Op.and] ?? []), Sequelize.where(fn("LOWER", col("value")), { [Op.like]: term })];
       }
     }
 
+    const include = [
+      ...this.defaultIncludes,
+      ...(Array.isArray(options?.include) ? options.include : options?.include ? [options.include] : []),
+    ];
+
+    const sortField = orderOpts?.sort ?? "created_at";
+    const sortDir = orderOpts?.dir ?? "DESC";
+
     const { count, rows } = await Name.findAndCountAll({
+      ...options,
       where,
-      include: [{ association: "type" }, { association: "gender" }],
+      include,
       limit,
       offset,
+      order: [
+        [sortField, sortDir],
+        ["id", "ASC"],
+      ],
+      distinct: true,
     });
 
     return { count, names: rows };
@@ -124,21 +156,23 @@ class NameService {
    * @param {CreateNameData} data - The data required to create the name.
    * @returns {Promise<Name>} The newly created `Name` instance.
    * @throws {CustomError} If:
-   *   - Provided `typeId` or `genderId` do not exist (404 Not Found).
-   *   - A name with the same value and type already exists (409 Conflict).
+   *   - The provided `typeLabel` does not exist (404 Not Found).
+   *   - The provided `genderLabel` does not exist (404 Not Found).
+   *   - The provided `genderLabel` is not allowed for the given `type` (400 Bad Request).
+   *   - A name with the same value already exists for the given type (409 Conflict).
    */
-  public static async createName(data: CreateNameData): Promise<Name> {
-    const { value, typeId, genderId } = data;
+  public static async createName(data: CreateNamePayload): Promise<Name> {
+    const { value, typeLabel, genderLabel } = data;
 
-    await TypeService.findTypeById(typeId);
-    await GenderService.findGenderById(genderId);
+    const type = await TypeService.findTypeByLabel(typeLabel);
+    const gender = await GenderService.findGenderByLabel(genderLabel);
 
-    const normalizedValue = value.trim();
+    TypeService.assertTypeGenderIsAllowed(type, gender.label);
 
-    const length = normalizedValue.length >= 9 ? "long" : normalizedValue.length >= 6 ? "medium" : "short";
+    const normalizedValue = capitalize(value);
 
     const exists = await Name.findOne({
-      where: { value: normalizedValue, type_id: typeId },
+      where: { value: normalizedValue, type_id: type.id },
       include: [{ association: "type" }],
     });
 
@@ -148,19 +182,20 @@ class NameService {
         message: `The name "${normalizedValue}" already exists for the ${
           exists.type?.label ? `type ${exists.type?.label}` : "provided type"
         }.`,
+        details: { provided: value, normalized: normalizedValue },
       });
     }
 
+    const length = computeNameLength(normalizedValue);
+
     const name = await Name.create({
       value: normalizedValue,
-      type_id: typeId,
-      gender_id: genderId,
+      type_id: type.id,
+      gender_id: gender.id,
       length,
     });
 
-    await name.reload({ include: [{ association: "type" }, { association: "gender" }] });
-
-    return name;
+    return name.reload({ include: this.defaultIncludes });
   }
 
   /**
@@ -168,11 +203,11 @@ class NameService {
    *
    * @param {CreateNameData[]} dataArray - Array of names to create.
    * @returns {Promise<BulkNameResult>} An object containing:
-   *   - `created`: Array of successfully created `Name` instances.
-   *   - `skipped`: Array of name values that already existed and were skipped.
-   *   - `failed`: Array of failed creations with their reason.
+   *   - `created`→ Array of successfully created `Name` instances.
+   *   - `skipped`→ Array of name values that already existed and were skipped.
+   *   - `failed`→ Array of failed creations with their reason.
    */
-  public static async createNames(dataArray: CreateNameData[]): Promise<BulkNameResult> {
+  public static async createNames(dataArray: CreateNamePayload[]): Promise<BulkNameResult> {
     const created: Name[] = [];
     const skipped: string[] = [];
     const failed: { value: string; reason: string }[] = [];
@@ -203,9 +238,9 @@ class NameService {
    *
    * @param {unknown[]} rawArray - The raw input array of names to validate and create.
    * @returns {Promise<BulkNameResult>} An object containing:
-   *   - `created`: Array of successfully created `Name` instances.
-   *   - `skipped`: Array of name values that already existed and were skipped.
-   *   - `failed`: Array of failed creations with their reason.
+   *   - `created` → Array of successfully created `Name` instances.
+   *   - `skipped` → Array of name values that already existed and were skipped.
+   *   - `failed` → Array of failed creations with their reason.
    * @throws {CustomError} If:
    *   - The payload is not an array (400 Bad Request).
    */
@@ -217,13 +252,14 @@ class NameService {
       });
     }
 
-    const validItems: CreateNameData[] = [];
+    const validItems: CreateNamePayload[] = [];
     const validationFailed: { value: string; reason: string }[] = [];
 
     for (let i = 0; i < rawArray.length; i++) {
       const raw = rawArray[i];
+
       try {
-        const v = await createNameSchema.validateAsync(raw, {
+        const v = await createNameBodySchema.validateAsync(raw, {
           abortEarly: false,
           stripUnknown: true,
         });
@@ -251,9 +287,9 @@ class NameService {
    *
    * @param {Buffer} buffer - The file buffer containing a JSON array of names to import.
    * @returns {Promise<BulkNameResult>} An object containing:
-   *   - `created`: Array of successfully created `Name` instances.
-   *   - `skipped`: Array of name values that already existed and were skipped.
-   *   - `failed`: Array of failed creations with their reason.
+   *   - `created` → Array of successfully created `Name` instances.
+   *   - `skipped` → Array of name values that already existed and were skipped.
+   *   - `failed` → Array of failed creations with their reason.
    * @throws {CustomError} If:
    *   - The JSON format is invalid (400 Bad Request).
    */
@@ -265,7 +301,10 @@ class NameService {
     try {
       parsed = JSON.parse(content);
     } catch (err) {
-      throw new CustomError({ statusCode: 400, message: "Invalid JSON file format." });
+      throw new CustomError({
+        statusCode: 400,
+        message: "Invalid JSON file format.",
+      });
     }
 
     return this.validateAndCreateNames(parsed as unknown[]);
@@ -277,33 +316,49 @@ class NameService {
    * Only names with status `"active"` are eligible.
    *
    * @param {number} typeId - The ID of the type to scope the random draw.
-   * @param {number} limit - The maximum number of names to return.
+   * @param {number} [size] - The maximum number of names to return (default 10).
    * @param {GenerateNameFilters} [filters] - Optional filters to apply:
-   *   - `genderId` : Filter by associated gender ID.
-   *   - `length`: Filter by name length category (`short`, `medium`, `long`).
-   *   - `charLength`: Filter by the exact number of characters in the name value.
+   *   - `genderLabel` →  Filter by associated gender label (`male`, `female`, `neutral`).
+   *   - `length` → Filter by name length category (`short`, `medium`, `long`).
+   *   - `charLength` → Filter by the exact number of characters in the name value.
+   * @param {FindOptions<Name>} [options] - Additional Sequelize find options (e.g., includes).
    * @returns {Promise<Name[]>} An array of randomly selected `Name` instances.
    * @throws {CustomError} If:
-   *   - Provided `typeId` or `genderId` do not exist (404 Not Found).
+   *   - No `Type` is found with the provided `typeId` (`404 Not Found`).
+   *   - The provided type does not support gender filtering but `genderLabel` was given (`400 Bad Request`).
+   *   - The provided `genderLabel` does not match any existing gender (`404 Not Found`).
    */
   public static async generateRandomNamesFromType(
     typeId: number,
-    limit: number,
-    filters?: GenerateNameFilters
+    size?: number,
+    filters?: GenerateNamesFilters,
+    options?: FindOptions<Name>
   ): Promise<Name[]> {
-    await TypeService.findTypeById(typeId);
+    const type = await TypeService.findTypeById(typeId);
 
     let where: FlexibleWhere<Name> = {
-      type_id: typeId,
-      status: "active",
+      ...options?.where,
+      type_id: type.id,
+      status: NAME_STATUSES.ACTIVE,
     };
 
     if (filters) {
-      const { genderId, length, charLength } = filters;
+      const { genderLabel, length, charLength } = filters;
 
-      if (genderId) {
-        await GenderService.findGenderById(genderId);
-        where.gender_id = genderId;
+      if (genderLabel) {
+        const allowed = await type.canBeFilteredByGender();
+
+        if (!allowed) {
+          throw new CustomError({
+            statusCode: 400,
+            message: `The provided type does not support gender filtering.`,
+            details: { typeLabel: type.label },
+          });
+        }
+
+        const gender = await GenderService.findGenderByLabel(genderLabel);
+
+        where.gender_id = gender.id;
       }
 
       if (length) {
@@ -311,18 +366,21 @@ class NameService {
       }
 
       if (charLength) {
-        where[Op.and] = [
-          ...(where[Op.and] ?? []),
-          whereFn(fn("CHAR_LENGTH", col("value")), { [Op.eq]: charLength }),
-        ];
+        where[Op.and] = [...(where[Op.and] ?? []), whereFn(fn("CHAR_LENGTH", col("value")), { [Op.eq]: charLength })];
       }
     }
 
+    const include = [
+      ...this.defaultIncludes,
+      ...(Array.isArray(options?.include) ? options.include : options?.include ? [options.include] : []),
+    ];
+
     const names = await Name.findAll({
+      ...options,
       where,
+      include,
+      limit: size ?? DEFAULT_RANDOM_NAMES,
       order: [Sequelize.literal("RAND()")],
-      include: [{ association: "type" }, { association: "gender" }],
-      limit,
     });
 
     return names;
@@ -335,36 +393,43 @@ class NameService {
    * @param {UpdateNameData} data - The fields to update, such as value, typeId or genderId.
    * @returns {Promise<Name>} The updated name instance.
    * @throws {CustomError} If:
-   *   - The name is archived (422 Unprocessable Entity).
+   *   - The name is archived (409 Conflict).
    *   - Provided `typeId` or `genderId` do not exist (404 Not Found).
    *   - The name has favorites and `value` is changed (403 Forbidden).
    *   - Another name with the same value and type already exists (409 Conflict).
    */
-  public static async updateName(id: string, data: UpdateNameData): Promise<Name> {
+  public static async updateName(id: string, data: UpdateNamePayload): Promise<Name> {
+    const { value, typeLabel, genderLabel } = data;
+
     const name = await this.findNameById(id);
 
-    if (name.status === "archived") {
+    if (name.status === NAME_STATUSES.ARCHIVED) {
       throw new CustomError({
-        statusCode: 422,
+        statusCode: 409,
         message: "Cannot modify an archived name.",
       });
     }
 
-    if (data.typeId && data.typeId !== name.type_id) {
-      await TypeService.findTypeById(data.typeId);
+    const typeChanged = typeLabel && typeLabel !== name.type?.label;
+    const genderChanged = genderLabel && genderLabel !== name.gender?.label;
+
+    const newType = typeChanged ? await TypeService.findTypeByLabel(typeLabel) : null;
+    const newGender = genderChanged ? await GenderService.findGenderByLabel(genderLabel) : null;
+
+    const finalType = newType ?? name.type!;
+    const finalGender = newGender ?? name.gender!;
+
+    if (typeChanged || genderChanged) {
+      TypeService.assertTypeGenderIsAllowed(finalType, finalGender.label);
     }
 
-    if (data.genderId && data.genderId !== name.gender_id) {
-      await GenderService.findGenderById(data.genderId);
-    }
-
-    const normalizedValue = data.value?.trim();
+    const normalizedValue = value ? capitalize(value) : undefined;
     const valueChanged = normalizedValue && normalizedValue !== name.value;
 
     if (valueChanged) {
-      const favoritesCount = await Favorite.count({ where: { name_id: name.id } });
+      const favoriteExists = await Favorite.findOne({ where: { name_id: name.id } });
 
-      if (favoritesCount > 0) {
+      if (favoriteExists) {
         throw new CustomError({
           statusCode: 403,
           message: "This name has been favorited and cannot be renamed. Consider duplicating it.",
@@ -372,28 +437,32 @@ class NameService {
       }
     }
 
-    const typeChanged = data.typeId && data.typeId !== name.type_id;
-
     if (valueChanged || typeChanged) {
-      const value = normalizedValue ?? name.value;
-      const typeId = data.typeId ?? name.type_id;
+      const finalValue = normalizedValue ?? name.value;
 
       const exists = await Name.findOne({
-        where: { value, type_id: typeId },
+        where: { value: finalValue, type_id: finalType.id },
         include: [{ association: "type" }],
       });
 
       if (exists && exists.id !== name.id) {
         throw new CustomError({
           statusCode: 409,
-          message: `The name "${value}" already exists for the ${
+          message: `The name "${finalValue}" already exists for the ${
             exists.type?.label ? `type ${exists.type?.label}` : "provided type"
           }.`,
         });
       }
     }
 
-    return name.updateFields(data);
+    await name.updateFields({
+      ...data,
+      value: normalizedValue ?? data.value,
+      typeId: finalType.id,
+      genderId: finalGender.id,
+    });
+
+    return name.reload({ include: this.defaultIncludes });
   }
 
   /**
@@ -406,7 +475,8 @@ class NameService {
    */
   public static async activateName(id: string): Promise<Name> {
     const name = await NameService.findNameById(id);
-    return name.setStatus("active");
+    await name.setStatus(NAME_STATUSES.ACTIVE);
+    return name.reload({ include: this.defaultIncludes });
   }
 
   /**
@@ -419,7 +489,8 @@ class NameService {
    */
   public static async deactivateName(id: string): Promise<Name> {
     const name = await NameService.findNameById(id);
-    return name.setStatus("inactive");
+    await name.setStatus(NAME_STATUSES.INACTIVE);
+    return name.reload({ include: this.defaultIncludes });
   }
 
   /**
@@ -432,8 +503,13 @@ class NameService {
    */
   public static async archiveName(id: string): Promise<Name> {
     const name = await NameService.findNameById(id);
-    return name.setStatus("archived");
+    await name.setStatus(NAME_STATUSES.ARCHIVED);
+    return name.reload({ include: this.defaultIncludes });
   }
+}
+
+function computeNameLength(val: string): NameLength {
+  return val.length >= 9 ? NAME_LENGTHS.LONG : val.length >= 6 ? NAME_LENGTHS.MEDIUM : NAME_LENGTHS.SHORT;
 }
 
 export default NameService;

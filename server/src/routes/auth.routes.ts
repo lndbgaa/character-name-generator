@@ -28,7 +28,11 @@ router.post("/logout", logoutUser);
 router.post("/refresh-token", refreshUserAccessToken);
 
 router.post("/reset-password/request", validate(requestPasswordResetSchema), requestPasswordReset);
-router.post("/reset-password/verify", validate(verifyPasswordResetSchema), verifyPasswordResetToken);
+router.post(
+  "/reset-password/verify",
+  validate(verifyPasswordResetSchema),
+  verifyPasswordResetToken
+);
 router.post("/reset-password", validate(passwordResetSchema), resetUserPassword);
 
 export default router;

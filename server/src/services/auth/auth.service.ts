@@ -1,4 +1,4 @@
-import { sequelize } from "@/database/mysql.js";
+import { sequelize } from "@/database/mysql.database.js";
 import { RefreshToken, User } from "@/models/index.js";
 import CustomError from "@/utils/CustomError.utils.js";
 import { generateAccessToken, generateRefreshToken } from "@/utils/auth-token.utils.js";
@@ -7,8 +7,12 @@ import type { AuthResult, LoginUserData, RegisterUserData } from "@/types/auth.t
 
 export default class AuthService {
   /**
+   * Ensures that no other account exists with the given email address.
    *
-   * @param email
+   * @param {string} email - The email to check.
+   * @returns {Promise<void>}
+   * @throws {CustomError} If:
+   *   - The email is already taken (409 Conflict).
    */
   public static async assertEmailIsUnique(email: string): Promise<void> {
     const cleanEmail = email.trim().toLowerCase();
@@ -24,7 +28,10 @@ export default class AuthService {
 
   /**
    *
-   * @param username
+   * @param {string} username - The username to check.
+   * @returns {Promise<void>}
+   * @throws {CustomError} If:
+   *   - The username is already taken (409 Conflict).
    */
   public static async assertUsernameIsUnique(username: string): Promise<void> {
     const cleanUsername = username.trim().toLowerCase();
@@ -105,7 +112,7 @@ export default class AuthService {
       const userId = user.id;
       const userRole = user.role?.label || "user";
 
-      user.updateLastLogin({ transaction });
+      user.setLastLogin({ transaction });
 
       const refreshToken = await generateRefreshToken(userId, { transaction });
       const accessToken = generateAccessToken(userId, userRole);
@@ -155,7 +162,7 @@ export default class AuthService {
       include: [{ association: "role" }],
     });
 
-    if (!user || !user.isActive) {
+    if (!user || !user.hasStatus("active")) {
       throw new CustomError({
         statusCode: 403,
         message: "We could not renew your session. Please log in again.",

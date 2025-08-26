@@ -23,10 +23,10 @@ class UploadService {
       });
     }
 
-    const file64 = dataUriFromBuffer(file.buffer, file.filename);
+    const content = dataUriFromBuffer(file.buffer, file.filename);
 
     try {
-      return await cloudinary.uploader.upload(file64.content!, {
+      return await cloudinary.uploader.upload(content, {
         public_id: path,
         folder: path,
         overwrite: true,

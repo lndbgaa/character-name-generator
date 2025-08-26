@@ -1,8 +1,11 @@
+import { sequelize } from "@/database/mysql.database.js";
 import { Universe } from "@/models/index.js";
 import CustomError from "@/utils/CustomError.utils.js";
+import { capitalize, normalizeLabel } from "@/utils/string.utils.js";
 
 import type { CreateUniverseData, UpdateUniverseData } from "@/types/universes.types.js";
-import type { FindOptions } from "sequelize";
+
+import type { FindOptions, WhereOptions } from "sequelize";
 
 class UniverseService {
   /**
@@ -13,14 +16,40 @@ class UniverseService {
    * @returns {Promise<void>}
    */
   public static async assertUniverseLabelIsUnique(label: string): Promise<void> {
-    const cleanLabel = label.trim().toLowerCase();
+    const normalized = normalizeLabel(label);
 
-    const exists = await Universe.findOne({ where: { label: cleanLabel } });
+    const exists = await Universe.findOne({
+      where: sequelize.where(sequelize.fn("LOWER", sequelize.col("label")), normalized),
+    });
 
     if (exists) {
       throw new CustomError({
         statusCode: 409,
-        message: `A universe with label "${cleanLabel}" already exists.`,
+        message: `A universe with label "${normalized}" already exists.`,
+        details: { provided: label, normalized },
+      });
+    }
+  }
+
+  /**
+   * Checks if a given display name is unique (case-insensitive).
+   *
+   * @param {string} displayName - The user-facing display name of the universe to validate.
+   * @throws {CustomError} If a universe with the same display name already exists (409 Conflict).
+   * @returns {Promise<void>}
+   */
+  public static async assertUniverseDisplayIsUnique(displayName: string): Promise<void> {
+    const normalized = capitalize(displayName);
+
+    const type = await Universe.findOne({
+      where: sequelize.where(sequelize.fn("LOWER", sequelize.col("display_name")), normalized.toLowerCase()),
+    });
+
+    if (type) {
+      throw new CustomError({
+        statusCode: 409,
+        message: `A universe with display name "${normalized}" already exists.`,
+        details: { provided: displayName, normalized },
       });
     }
   }
@@ -30,11 +59,16 @@ class UniverseService {
    *
    * @param {number} id - The unique ID of the universe to retrieve.
    * @param {FindOptions} [options] - Additional Sequelize find options (e.g., includes).
-   * @returns {Promise<Universe>} - The found universe instance.
+   * @returns {Promise<Universe>} - The found `Universe` instance.
    * @throws {CustomError} - If no universe is found with the provided ID (404 Not Found).
    */
   public static async findUniverseById(id: number, options?: FindOptions): Promise<Universe> {
-    const universe = await Universe.findByPk(id, options);
+    const mergedWhere: WhereOptions = { ...options?.where, id };
+
+    const universe = await Universe.findOne({
+      ...options,
+      where: mergedWhere,
+    });
 
     if (!universe) {
       throw new CustomError({
@@ -48,12 +82,42 @@ class UniverseService {
   }
 
   /**
+   * Retrieves a universe by its label.
+   *
+   * @param {string} label - The unique label of the universe to retrieve (e.g., "fantasy", "sci-fi").
+   * @param {FindOptions} [options] - Additional Sequelize find options (e.g., includes).
+   * @returns {Promise<Universe>} - The found `Universe` instance.
+   * @throws {CustomError} - If:
+   *   - No universe is found with the provided label (404 Not Found).
+   */
+  public static async findUniverseByLabel(label: string, options?: FindOptions): Promise<Universe> {
+    const normalized = normalizeLabel(label);
+
+    const mergedWhere: WhereOptions = { ...options?.where, label: normalized };
+
+    const universe = await Universe.findOne({
+      ...options,
+      where: mergedWhere,
+    });
+
+    if (!universe) {
+      throw new CustomError({
+        statusCode: 404,
+        message: "No universe found with the specified label.",
+        details: { provided: label, normalized },
+      });
+    }
+
+    return universe;
+  }
+
+  /**
    * Retrieves all universes from the database.
    *
    * @param {FindOptions} [options] - Additional Sequelize find options (e.g., includes).
-   * @returns {Promise<Universe[]>} - An array of Universe instances.
+   * @returns {Promise<Universe[]>} - An array of `Universe` instances.
    */
-  public static async findAllUniverses(options?: FindOptions): Promise<Universe[]> {
+  public static async findUniverses(options?: FindOptions): Promise<Universe[]> {
     return Universe.findAll(options);
   }
 
@@ -68,6 +132,7 @@ class UniverseService {
     const { label, displayName, description } = data;
 
     await this.assertUniverseLabelIsUnique(label);
+    await this.assertUniverseDisplayIsUnique(displayName);
 
     return Universe.create({
       label,

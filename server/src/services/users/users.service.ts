@@ -1,7 +1,12 @@
 import { col, fn, Op, Sequelize } from "sequelize";
 
+import {
+  ACCOUNT_ROLES_LABEL,
+  ACCOUNT_ROLES_MAP_REVERSE,
+  ACCOUNT_STATUSES,
+} from "@/constants/user.constants.js";
+
 import { User } from "@/models/index.js";
-import RoleService from "@/services/roles.service.js";
 import CustomError from "@/utils/CustomError.utils.js";
 import { escapeLike } from "@/utils/string.utils.js";
 
@@ -35,32 +40,58 @@ class UserService {
   }
 
   /**
+   * Retrieves a paginated list of users with optional filters and sorting.
    *
    * @param {number} limit
    * @param {number} offset
-   * @param {GetUsersFilters} filters
-   * @returns {Promise<{ count: number; users: User[] }>}
+   * @param {GetUserSortOptions} [orderOpts] - Sorting options.
+   * @param {GetUsersFilters} [filters] - Optional filters to apply.
+   * @returns {Promise<{ count: number; users: User[] }>} - An object containing:
+   *   - `count` → total number of matching users.
+   *   - `users` → array of `User` entities for the current page.
    * @throws {CustomError} If:
+   *   - An invalid `role` is provided.
+   *   - An invalid `status` is provided.
    */
-
-  public static async findAllUsers(
+  public static async findUsers(
     limit: number,
     offset: number,
-    filters?: GetUsersFilters,
-    orderOpts: GetUserSortOptions = { sort: "created_at", dir: "DESC" }
+    orderOpts?: GetUserSortOptions,
+    filters?: GetUsersFilters
   ): Promise<{ count: number; users: User[] }> {
     let where: FlexibleWhere<User> = {};
 
     if (filters) {
-      const { roleId, status } = filters;
+      const { role, status } = filters;
       let { search } = filters;
 
-      if (roleId) {
-        await RoleService.findRoleById(roleId);
+      if (role) {
+        const roleId = ACCOUNT_ROLES_MAP_REVERSE[role];
+
+        if (!roleId) {
+          throw new CustomError({
+            statusCode: 400,
+            message: "Invalid role value.",
+            debugMessage: `Invalid role "${role}". Allowed values are: ${Object.values(
+              ACCOUNT_ROLES_LABEL
+            ).join(", ")}.`,
+          });
+        }
+
         where.role_id = roleId;
       }
 
       if (status) {
+        if (!Object.values(ACCOUNT_STATUSES).includes(status)) {
+          throw new CustomError({
+            statusCode: 400,
+            message: "Invalid status value.",
+            debugMessage: `Invalid status "${status}". Allowed values are: ${Object.values(
+              ACCOUNT_STATUSES
+            ).join(", ")}.`,
+          });
+        }
+
         where.status = status;
       }
 
@@ -78,7 +109,9 @@ class UserService {
           { username: { [Op.like]: term } },
           { first_name: { [Op.like]: term } },
           { last_name: { [Op.like]: term } },
-          Sequelize.where(fn("CONCAT_WS", col("first_name"), " ", col("last_name")), { [Op.like]: term }),
+          Sequelize.where(fn("CONCAT_WS", col("first_name"), " ", col("last_name")), {
+            [Op.like]: term,
+          }),
         ];
       }
     }
@@ -89,8 +122,7 @@ class UserService {
       limit,
       offset,
       order: [
-        [orderOpts.sort, orderOpts.dir],
-        ["created_at", "DESC"],
+        [orderOpts?.sort ?? "created_at", orderOpts?.dir ?? "DESC"],
         ["id", "ASC"],
       ],
       distinct: true,
