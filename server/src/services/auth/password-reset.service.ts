@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import config from "@/config/app.config.js";
 import { sequelize } from "@/database/mysql.database.js";
 import { PasswordResetToken, User } from "@/models/index.js";
+import type { ResetUserPasswordPayload } from "@/types/auth.types";
 import { generateResetPasswordToken } from "@/utils/auth-token.utils.js";
 import CustomError from "@/utils/CustomError.utils.js";
 import renderTemplate from "@/utils/render-template.utils.js";
@@ -101,12 +102,13 @@ class PasswordResetService {
   /**
    * Resets a user's password using a valid reset token.
    *
-   * @param {string} resetToken - The password reset token.
-   * @param {string} newPassword - The new password to set for the user.
-   * @returns {Promise<void>} Resolves when the password has been successfully updated.
+   * @param {ResetUserPasswordPayload} data - The data needed to reset the password.
+   * @returns {Promise<void>}
    * @throws {CustomError} If the token is invalid or expired.
    */
-  public static async resetUserPassword(resetToken: string, newPassword: string): Promise<void> {
+  public static async resetUserPassword(data: ResetUserPasswordPayload): Promise<void> {
+    const { token: resetToken, password: newPassword } = data;
+
     const tokenRecord = await this.getValidTokenRecord(resetToken);
 
     const now = dayjs();

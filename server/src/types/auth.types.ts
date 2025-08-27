@@ -1,6 +1,7 @@
 import {
-  AUTH_REFRESH_TOKEN_STATUSES,
-  PWD_RESET_TOKEN_STATUSES,
+  EMAIL_VERIFICATION_TOKEN_STATUSES,
+  PASSWORD_RESET_TOKEN_STATUSES,
+  REFRESH_TOKEN_STATUSES,
 } from "@/constants/token.constants.js";
 
 import type { JwtPayload } from "jsonwebtoken";
@@ -9,11 +10,13 @@ import type { JwtPayload } from "jsonwebtoken";
  *    Constants-based Types
  * =========================== */
 
-export type AuthRefreshTokenStatus =
-  (typeof AUTH_REFRESH_TOKEN_STATUSES)[keyof typeof AUTH_REFRESH_TOKEN_STATUSES];
+export type EmailVerificationTokenStatus =
+  (typeof EMAIL_VERIFICATION_TOKEN_STATUSES)[keyof typeof EMAIL_VERIFICATION_TOKEN_STATUSES];
 
-export type PwdResetTokenStatus =
-  (typeof PWD_RESET_TOKEN_STATUSES)[keyof typeof PWD_RESET_TOKEN_STATUSES];
+export type RefreshTokenStatus = (typeof REFRESH_TOKEN_STATUSES)[keyof typeof REFRESH_TOKEN_STATUSES];
+
+export type PasswordResetTokenStatus =
+  (typeof PASSWORD_RESET_TOKEN_STATUSES)[keyof typeof PASSWORD_RESET_TOKEN_STATUSES];
 
 /* ===========================
  *     Payloads & Results
@@ -24,7 +27,7 @@ export interface CustomJwtPayload extends JwtPayload {
   role: string;
 }
 
-export interface RegisterUserData {
+export interface RegisterUserPayload {
   firstName: string;
   lastName: string;
   email: string;
@@ -32,7 +35,7 @@ export interface RegisterUserData {
   password: string;
 }
 
-export interface LoginUserData {
+export interface LoginUserPayload {
   email: string;
   password: string;
 }
@@ -40,4 +43,9 @@ export interface LoginUserData {
 export interface AuthResult {
   accessToken: string;
   refreshToken: string;
+}
+
+export interface ResetUserPasswordPayload {
+  token: string;
+  password: string;
 }

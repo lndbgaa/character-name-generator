@@ -1,9 +1,15 @@
+import { ACCOUNT_ROLES_LABEL, ACCOUNT_STATUSES } from "@/constants/user.constants.js";
+
 import { sequelize } from "@/database/mysql.database.js";
 import { RefreshToken, User } from "@/models/index.js";
 import CustomError from "@/utils/CustomError.utils.js";
 import { generateAccessToken, generateRefreshToken } from "@/utils/auth-token.utils.js";
 
-import type { AuthResult, LoginUserData, RegisterUserData } from "@/types/auth.types.js";
+import type { AuthResult, LoginUserPayload, RegisterUserPayload } from "@/types/auth.types.js";
+import EmailVerificationService from "./email-verification.service";
+
+const { USER } = ACCOUNT_ROLES_LABEL;
+const { ACTIVE } = ACCOUNT_STATUSES;
 
 export default class AuthService {
   /**
@@ -46,44 +52,29 @@ export default class AuthService {
   }
 
   /**
-   * Registers a new user and issues authentication tokens.
-
+   * Registers a new user and sends a verification email.
+   *
    * @param {RegisterUserData} data - Object containing user registration details.
-   * @returns {Promise<AuthResult>} An object containing the access and refresh tokens.
+   * @returns {Promise<User>} The newly created `User` instance.
    * @throws {CustomError} If the email or username is already taken.
    */
-  public static async registerUser(data: RegisterUserData): Promise<AuthResult> {
+  public static async registerUser(data: RegisterUserPayload): Promise<User> {
     const { email, username, password, firstName, lastName } = data;
 
     await this.assertEmailIsUnique(email);
     await this.assertUsernameIsUnique(username);
 
-    const { newUser, refreshToken } = await sequelize.transaction(async (transaction) => {
-      const newUser = await User.create(
-        {
-          email,
-          username,
-          password,
-          first_name: firstName,
-          last_name: lastName,
-        },
-        { transaction }
-      );
-
-      const refreshToken = await generateRefreshToken(newUser.id, { transaction });
-
-      return {
-        newUser,
-        refreshToken: refreshToken.token,
-      };
+    const newUser = await User.create({
+      email,
+      username,
+      password,
+      first_name: firstName,
+      last_name: lastName,
     });
 
-    const accessToken = generateAccessToken(newUser.id, "user");
+    await EmailVerificationService.sendForUser(newUser);
 
-    return {
-      refreshToken,
-      accessToken,
-    };
+    return newUser;
   }
 
   /**
@@ -91,9 +82,11 @@ export default class AuthService {
    *
    * @param {LoginUserData} data - Object containing user login credentials.
    * @returns {Promise<AuthResult>} An object containing the access and refresh tokens.
-   * @throws {CustomError} - If the credentials are incorrect.
+   * @throws {CustomError} If:
+   *   - The email or password is incorrect (401 Unauthorized).
+   *   - The email has not been verified (403 Forbidden).
    */
-  public static async loginUser(data: LoginUserData): Promise<AuthResult> {
+  public static async loginUser(data: LoginUserPayload): Promise<AuthResult> {
     const { email, password } = data;
 
     const user = await User.findOne({
@@ -108,9 +101,16 @@ export default class AuthService {
       });
     }
 
+    if (!user.is_verified) {
+      throw new CustomError({
+        statusCode: 403,
+        message: "Please verify your email before logging in.",
+      });
+    }
+
     return await sequelize.transaction(async (transaction) => {
       const userId = user.id;
-      const userRole = user.role?.label || "user";
+      const userRole = user.role?.label || USER;
 
       user.setLastLogin({ transaction });
 
@@ -162,7 +162,7 @@ export default class AuthService {
       include: [{ association: "role" }],
     });
 
-    if (!user || !user.hasStatus("active")) {
+    if (!user || !user.hasStatus(ACTIVE)) {
       throw new CustomError({
         statusCode: 403,
         message: "We could not renew your session. Please log in again.",
@@ -177,7 +177,7 @@ export default class AuthService {
       return await generateRefreshToken(userId, { transaction });
     });
 
-    const userRole = user.role?.label || "user";
+    const userRole = user.role?.label || USER;
 
     const newAccessToken = generateAccessToken(userId, userRole);
 

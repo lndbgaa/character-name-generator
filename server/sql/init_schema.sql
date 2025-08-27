@@ -40,8 +40,8 @@ CREATE TABLE type_allowed_genders (
   type_id INT NOT NULL,
   gender_id INT NOT NULL,
   PRIMARY KEY (type_id, gender_id),
-  CONSTRAINT fk_type_allowed FOREIGN KEY (type_id) REFERENCES types(id) ON DELETE CASCADE,
-  CONSTRAINT fk_gender_allowed FOREIGN KEY (gender_id) REFERENCES genders(id) ON DELETE CASCADE
+  FOREIGN KEY (type_id) REFERENCES types(id) ON DELETE CASCADE,
+  FOREIGN KEY (gender_id) REFERENCES genders(id) ON DELETE CASCADE
 );
 
 CREATE TABLE names (
@@ -80,6 +80,7 @@ CREATE TABLE users (
   last_name VARCHAR(100) NOT NULL,
   avatar_url VARCHAR(255) NULL,
   status ENUM('active', 'suspended', 'deleted') DEFAULT 'active',
+  is_verified BOOLEAN DEFAULT FALSE,
   last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -92,13 +93,26 @@ CREATE TABLE users (
   INDEX idx_users_status_created (status, created_at)
 );
 
+CREATE TABLE email_verification_tokens (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  user_id CHAR(36) NOT NULL,
+  token VARCHAR(32) NOT NULL UNIQUE,
+  status ENUM('active', 'used', 'expired') DEFAULT 'active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP NOT NULL,
+  used_at TIMESTAMP NULL,
+  CHECK (expires_at > created_at),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_email_token_expires (token, expires_at),
+  INDEX idx_email_user_status (user_id, status)
+);
+
 CREATE TABLE refresh_tokens (
   id CHAR(36) NOT NULL PRIMARY KEY,
   user_id CHAR(36) NOT NULL,
   token VARCHAR(21) NOT NULL UNIQUE,
   status ENUM('active', 'revoked', 'expired') DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   expires_at TIMESTAMP NOT NULL,
   revoked_at TIMESTAMP NULL,
   CHECK (expires_at > created_at),
@@ -110,10 +124,9 @@ CREATE TABLE refresh_tokens (
 CREATE TABLE password_reset_tokens (
   id CHAR(36) NOT NULL PRIMARY KEY,
   user_id CHAR(36) NOT NULL,
-  token VARCHAR(64) NOT NULL UNIQUE,
+  token VARCHAR(32) NOT NULL UNIQUE,
   status ENUM('active', 'used', 'expired') DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   expires_at TIMESTAMP NOT NULL,
   used_at TIMESTAMP NULL,
   CHECK (expires_at > created_at),

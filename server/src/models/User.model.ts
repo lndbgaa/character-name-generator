@@ -2,7 +2,12 @@ import bcrypt from "bcrypt";
 import dayjs from "dayjs";
 import { DataTypes, Model } from "sequelize";
 
-import { ACCOUNT_ROLES_LABEL, ACCOUNT_STATUSES } from "@/constants/user.constants.js";
+import {
+  ACCOUNT_ROLES_LABEL,
+  ACCOUNT_ROLES_MAP_REVERSE,
+  ACCOUNT_STATUSES,
+} from "@/constants/user.constants.js";
+
 import { sequelize } from "@/database/mysql.database.js";
 import CustomError from "@/utils/CustomError.utils.js";
 import { toDateOnly, toTimeOnly } from "@/utils/date.utils.js";
@@ -34,6 +39,9 @@ export const LAST_NAME_MIN = 2;
 export const LAST_NAME_MAX = 100;
 export const AVATAR_URL_MAX = 255;
 
+const { ACTIVE, SUSPENDED, DELETED } = ACCOUNT_STATUSES;
+const { USER } = ACCOUNT_ROLES_LABEL;
+
 /**
  * The `User` entity represents a registered user of the application.
  *
@@ -46,6 +54,7 @@ export const AVATAR_URL_MAX = 255;
  * - `last_name`: User's last name (2–100 characters).
  * - `avatar_url`: Optional URL string pointing to the user's avatar image.
  * - `status`: Account status — can be "active", "suspended", or "deleted".
+ * - `is_verified`:
  * - `last_login`: Timestamp of the user's most recent successful login.
  * - `created_at`: Automatic creation timestamp.
  * - `updated_at`: Automatic update timestamp.
@@ -62,6 +71,7 @@ export default class User extends Model {
   declare last_name: string;
   declare avatar_url: string | null;
   declare status: AccountStatus;
+  declare is_verified: boolean;
   declare last_login: Date;
   declare created_at: Date;
   declare updated_at: Date;
@@ -78,6 +88,21 @@ export default class User extends Model {
    */
   public async checkPassword(plainPassword: string): Promise<boolean> {
     return await bcrypt.compare(plainPassword, this.password);
+  }
+
+  /**
+   * Marks the user as verified (email successfully confirmed).
+   *
+   * @param {SaveOptions} [options] - Additional Sequelize save options (e.g., includes).
+   * @returns {Promise<User>} The updated `User` instance.
+   */
+  public async markAsVerified(options?: SaveOptions): Promise<User> {
+    if (!this.is_verified) {
+      this.is_verified = true;
+      await this.save({ ...options, fields: ["is_verified"] });
+    }
+
+    return this;
   }
 
   /**
@@ -152,8 +177,8 @@ export default class User extends Model {
    * @returns {Promise<User>} The updated `User` instance.
    */
   public async suspend(options?: SaveOptions): Promise<User> {
-    if (this.status === ACCOUNT_STATUSES.ACTIVE) {
-      this.status = ACCOUNT_STATUSES.SUSPENDED;
+    if (this.status === ACTIVE) {
+      this.status = SUSPENDED;
       this.suspended_at = dayjs().toDate();
       await this.save({ ...options, fields: ["status", "suspended_at"] });
     }
@@ -168,8 +193,8 @@ export default class User extends Model {
    * @returns {Promise<User>} The updated `User` instance.
    */
   public async reactivate(options?: SaveOptions): Promise<User> {
-    if (this.status === ACCOUNT_STATUSES.SUSPENDED) {
-      this.status = ACCOUNT_STATUSES.ACTIVE;
+    if (this.status === SUSPENDED) {
+      this.status = ACTIVE;
       this.suspended_at = null;
       await this.save({ ...options, fields: ["status", "suspended_at"] });
     }
@@ -184,8 +209,8 @@ export default class User extends Model {
    * @returns {Promise<User>} The updated `User` instance.
    */
   public async deleteSoft(options?: SaveOptions): Promise<User> {
-    if (this.status !== ACCOUNT_STATUSES.DELETED) {
-      this.status = ACCOUNT_STATUSES.DELETED;
+    if (this.status !== DELETED) {
+      this.status = DELETED;
       this.deleted_at = dayjs().toDate();
       this.suspended_at = null;
       await this.save({ ...options, fields: ["status", "deleted_at", "suspended_at"] });
@@ -229,7 +254,7 @@ export default class User extends Model {
   public toPrivateDTO(): PrivateUserDTO {
     return {
       ...this.toPublicDTO(),
-      role: this.role?.label || ACCOUNT_ROLES_LABEL.USER,
+      role: this.role?.label || USER,
       firstName: this.first_name,
       lastName: this.last_name,
       lastLogin: {
@@ -262,7 +287,7 @@ User.init(
     },
     role_id: {
       type: DataTypes.INTEGER,
-      defaultValue: 2,
+      defaultValue: ACCOUNT_ROLES_MAP_REVERSE[USER],
       references: { model: "roles", key: "id" },
       onUpdate: "CASCADE",
       onDelete: "RESTRICT",
@@ -336,7 +361,6 @@ User.init(
         },
       },
     },
-
     avatar_url: {
       type: DataTypes.STRING(AVATAR_URL_MAX),
       allowNull: true,
@@ -344,7 +368,12 @@ User.init(
     status: {
       type: DataTypes.ENUM(...Object.values(ACCOUNT_STATUSES)),
       allowNull: false,
-      defaultValue: ACCOUNT_STATUSES.ACTIVE,
+      defaultValue: ACTIVE,
+    },
+    is_verified: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
     last_login: {
       type: DataTypes.DATE,

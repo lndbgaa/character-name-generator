@@ -2,11 +2,12 @@ import ms from "ms";
 
 import config from "@/config/app.config.js";
 import AuthService from "@/services/auth/auth.service.js";
+import EmailVerificationService from "@/services/auth/email-verification.service.js";
 import PasswordResetService from "@/services/auth/password-reset.service.js";
 import catchAsync from "@/utils/catch-async.utils.js";
 import CustomError from "@/utils/CustomError.utils.js";
 
-import type { LoginUserData, RegisterUserData } from "@/types/auth.types.js";
+import type { LoginUserPayload, RegisterUserPayload, ResetUserPasswordPayload } from "@/types/auth.types.js";
 import type { CookieOptions, Request, Response } from "express";
 
 const { env, jwt } = config;
@@ -24,34 +25,51 @@ function generateCookieOptions(): CookieOptions {
 
 /**
  * Registers a new user account.
- * - Extracts user data from the request body.
- * - Calls AuthService to create the user and generate tokens.
- * - Sets the refresh token in an HttpOnly cookie.
- * - Returns the access token in the response.
  */
 export const registerUser = catchAsync(async (req: Request, res: Response): Promise<Response> => {
-  const data: RegisterUserData = req.body;
+  const data: RegisterUserPayload = req.body;
 
-  const { accessToken, refreshToken } = await AuthService.registerUser(data);
-
-  res.cookie("refreshToken", refreshToken, generateCookieOptions());
+  await AuthService.registerUser(data);
 
   return res.status(201).json({
     success: true,
-    message: "🎉 Welcome aboard! Your account has been created successfully.",
-    data: { accessToken },
+    message: "🎉 Welcome aboard! Please check your email to verify your account before logging in.",
+  });
+});
+
+/**
+ * Verifies a user's email address.
+ */
+export const verifyEmail = catchAsync(async (req: Request, res: Response): Promise<Response> => {
+  const token: string = req.body.token;
+
+  await EmailVerificationService.verify(token);
+
+  return res.status(200).json({
+    success: true,
+    message: "✅ Your email has been successfully verified. You can now log in.",
+  });
+});
+
+/**
+ * Resends the email verification link.
+ */
+export const resendVerificationEmail = catchAsync(async (req: Request, res: Response): Promise<Response> => {
+  const email: string = req.body.email;
+
+  await EmailVerificationService.send(email);
+
+  return res.status(200).json({
+    success: true,
+    message: "📧 A new verification email has been sent. Please check your inbox.",
   });
 });
 
 /**
  * Authenticates a user and starts a session.
- * - Extracts login credentials from the request body.
- * - Calls AuthService to validate credentials and generate tokens.
- * - Sets the refresh token in an HttpOnly cookie.
- * - Returns the access token in the response.
  */
 export const loginUser = catchAsync(async (req: Request, res: Response): Promise<Response> => {
-  const data: LoginUserData = req.body;
+  const data: LoginUserPayload = req.body;
 
   const { accessToken, refreshToken } = await AuthService.loginUser(data);
 
@@ -65,14 +83,42 @@ export const loginUser = catchAsync(async (req: Request, res: Response): Promise
 });
 
 /**
+ * Refreshes the access token using a valid refresh token.
+ */
+export const refreshUserAccessToken = catchAsync(async (req: Request, res: Response): Promise<Response> => {
+  const refreshToken: string = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    throw new CustomError({
+      statusCode: 401,
+      message: "❌ You are not logged in. Please log in again.",
+      debugMessage: "No session token (refresh token) found in cookies.",
+    });
+  }
+
+  try {
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } = await AuthService.refreshUserAccessToken(
+      refreshToken
+    );
+
+    res.cookie("refreshToken", newRefreshToken, generateCookieOptions());
+
+    return res.status(200).json({
+      success: true,
+      message: "✅ Your session has been successfully extended.",
+      data: { accessToken: newAccessToken },
+    });
+  } catch (err) {
+    res.clearCookie("refreshToken", generateCookieOptions());
+    throw err;
+  }
+});
+
+/**
  * Logs out the user and ends the session.
- * - Retrieves the refresh token from cookies.
- * - Calls AuthService to invalidate the token on the server side.
- * - Clears the refresh token cookie.
- * - Returns a confirmation response.
  */
 export const logoutUser = catchAsync(async (req: Request, res: Response): Promise<Response> => {
-  const refreshToken = req.cookies.refreshToken;
+  const refreshToken: string = req.cookies.refreshToken;
 
   if (!refreshToken) {
     return res.status(200).json({
@@ -92,84 +138,40 @@ export const logoutUser = catchAsync(async (req: Request, res: Response): Promis
 });
 
 /**
- * Refreshes the access token using a valid refresh token.
- * - Retrieves the refresh token from cookies.
- * - Calls AuthService to validate and rotate the refresh token.
- * - Sets the new refresh token in an HttpOnly cookie.
- * - Returns a new access token in the response.
- * - If the refresh token is missing or invalid, clears the cookie and throws an error.
- */
-export const refreshUserAccessToken = catchAsync(async (req: Request, res: Response): Promise<Response> => {
-  try {
-    const refreshToken = req.cookies.refreshToken;
-
-    if (!refreshToken) {
-      throw new CustomError({
-        statusCode: 401,
-        message: "You are not logged in. Please log in again.",
-        debugMessage: "No session token (refresh token) found in cookies.",
-      });
-    }
-
-    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-      await AuthService.refreshUserAccessToken(refreshToken);
-
-    res.cookie("refreshToken", newRefreshToken, generateCookieOptions());
-
-    return res.status(200).json({
-      success: true,
-      message: "✅ Your session has been successfully extended.",
-      data: { accessToken: newAccessToken },
-    });
-  } catch (err) {
-    res.clearCookie("refreshToken", generateCookieOptions());
-    throw err;
-  }
-});
-
-/**
  * Sends a password reset link to the user’s email address.
- * - Extracts the email from the request body.
- * - Calls PasswordResetService to generate a password reset token and send the email.
- * - Always returns a generic success message to prevent email enumeration.
  */
 export const requestPasswordReset = catchAsync(async (req: Request, res: Response): Promise<Response> => {
-  const { email } = req.body;
+  const email: string = req.body.email;
 
   await PasswordResetService.sendPasswordResetLink(email);
 
   return res.status(200).json({
     success: true,
-    message: "If an account with this email exists, we have sent you a password reset link.",
+    message: "📧 If an account with this email exists, we have sent you a password reset link.",
   });
 });
 
 /**
  * Verifies if a password reset token is valid.
- * - Extracts the token from the request body.
- * - Calls PasswordResetService to check the token’s validity and expiration.
- * - Returns HTTP 200 if the token is valid, otherwise throws an error.
  */
 export const verifyPasswordResetToken = catchAsync(async (req: Request, res: Response): Promise<Response> => {
-  const { token } = req.body;
+  const token: string = req.body.token;
 
   await PasswordResetService.verifyPasswordResetToken(token);
 
-  return res.sendStatus(200).json({
+  return res.status(200).json({
     success: true,
+    message: "✅ Password reset token is valid.",
   });
 });
 
 /**
  * Resets the user’s password using a valid reset token.
- * - Extracts the reset token and the new password from the request body.
- * - Calls PasswordResetService to validate the token and update the user’s password.
- * - Returns HTTP 200 upon successful password reset.
  */
 export const resetUserPassword = catchAsync(async (req: Request, res: Response): Promise<Response> => {
-  const { token, password } = req.body;
+  const data: ResetUserPasswordPayload = req.body;
 
-  await PasswordResetService.resetUserPassword(token, password);
+  await PasswordResetService.resetUserPassword(data);
 
   return res.status(200).json({
     success: true,

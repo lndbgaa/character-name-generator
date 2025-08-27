@@ -3,7 +3,7 @@ import ms from "ms";
 import { nanoid } from "nanoid";
 
 import config from "@/config/app.config.js";
-import { PasswordResetToken, RefreshToken } from "@/models/index.js";
+import { EmailVerificationToken, PasswordResetToken, RefreshToken } from "@/models/index.js";
 import { generateJwt } from "@/utils/jwt.utils.js";
 
 import type { AccountRoleLabel } from "@/types/users/user.types.js";
@@ -29,7 +29,10 @@ export function generateAccessToken(userId: string, userRole: AccountRoleLabel):
  * @param {CreateOptions} [options] - Additional Sequelize create options (e.g., includes).
  * @returns {Promise<RefreshToken>} The `RefreshToken` instance of the created refresh token.
  */
-export function generateRefreshToken(userId: string, options?: CreateOptions): Promise<RefreshToken> {
+export function generateRefreshToken(
+  userId: string,
+  options?: CreateOptions
+): Promise<RefreshToken> {
   const now = dayjs();
 
   return RefreshToken.create(
@@ -37,6 +40,28 @@ export function generateRefreshToken(userId: string, options?: CreateOptions): P
       user_id: userId,
       token: nanoid(),
       expires_at: now.add(ms(refreshExpiration), "ms").toDate(),
+    },
+    options
+  );
+}
+
+/**
+ *
+ * @param userId
+ * @param options
+ * @returns
+ */
+export function generateEmailVerificationToken(
+  userId: string,
+  options?: CreateOptions
+): Promise<EmailVerificationToken> {
+  const now = dayjs();
+
+  return EmailVerificationToken.create(
+    {
+      user_id: userId,
+      token: nanoid(32),
+      expires_at: now.add(1, "day").toDate(),
     },
     options
   );

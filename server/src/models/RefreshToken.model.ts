@@ -1,12 +1,16 @@
 import dayjs from "dayjs";
 import { DataTypes, Model } from "sequelize";
 
+import { REFRESH_TOKEN_STATUSES } from "@/constants/token.constants.js";
+
 import { sequelize } from "@/database/mysql.database.js";
 import CustomError from "@/utils/CustomError.utils.js";
 
 import type { User } from "@/models/index.js";
-import type { AuthRefreshTokenStatus } from "@/types/auth.types.js";
+import type { RefreshTokenStatus } from "@/types/auth.types.js";
 import type { SaveOptions } from "sequelize";
+
+const { ACTIVE, REVOKED, EXPIRED } = REFRESH_TOKEN_STATUSES;
 
 /**
  * The `RefreshToken` entity represents a long-lived authentication token
@@ -19,15 +23,13 @@ import type { SaveOptions } from "sequelize";
  * - `expires_at`: Expiration timestamp (token is invalid after this point).
  * - `revoked_at`: Timestamp of when the token was explicitly revoked (nullable).
  * - `created_at`: Automatic creation timestamp.
- * - `updated_at`: Automatic update timestamp.
  */
 export default class RefreshToken extends Model {
   declare id: string;
   declare user_id: string;
   declare token: string;
-  declare status: AuthRefreshTokenStatus;
+  declare status: RefreshTokenStatus;
   declare created_at: Date;
-  declare updated_at: Date;
   declare expires_at: Date;
   declare revoked_at: Date | null;
 
@@ -39,7 +41,7 @@ export default class RefreshToken extends Model {
    * @returns {boolean} True if status is "active" and the expiration date is in the future.
    */
   public isValid(): boolean {
-    return this.status === "active" && dayjs().isBefore(this.expires_at);
+    return this.status === ACTIVE && dayjs().isBefore(this.expires_at);
   }
 
   /**
@@ -49,24 +51,11 @@ export default class RefreshToken extends Model {
    * @returns {Promise<void>}
    */
   public async markAsRevoked(options?: SaveOptions): Promise<void> {
-    if (this.status !== "active") return;
+    if (this.status !== ACTIVE) return;
 
-    this.status = "revoked";
+    this.status = REVOKED;
     this.revoked_at = dayjs().toDate();
     await this.save({ ...options, fields: ["status", "revoked_at"] });
-  }
-
-  /**
-   * Marks the refresh token as expired.
-   *
-   * @param {SaveOptions} [options] - Additional Sequelize save options (e.g., includes).
-   * @returns {Promise<void>}
-   */
-  public async markAsExpired(options?: SaveOptions): Promise<void> {
-    if (this.status !== "active" || !dayjs().isAfter(this.expires_at)) return;
-
-    this.status = "expired";
-    await this.save({ ...options, fields: ["status"] });
   }
 }
 
@@ -89,9 +78,9 @@ RefreshToken.init(
       unique: true,
     },
     status: {
-      type: DataTypes.ENUM("active", "revoked", "expired"),
+      type: DataTypes.ENUM(...Object.values(REFRESH_TOKEN_STATUSES)),
       allowNull: false,
-      defaultValue: "active",
+      defaultValue: ACTIVE,
     },
     expires_at: {
       type: DataTypes.DATE,
@@ -107,8 +96,8 @@ RefreshToken.init(
     modelName: "RefreshToken",
     tableName: "refresh_tokens",
     timestamps: true,
+    updatedAt: false,
     createdAt: "created_at",
-    updatedAt: "updated_at",
     indexes: [
       {
         name: "idx_refresh_status_expires",
@@ -122,11 +111,13 @@ RefreshToken.init(
   }
 );
 
-RefreshToken.beforeValidate((token: RefreshToken) => {
-  if (token.expires_at <= token.created_at) {
+RefreshToken.beforeCreate((token: RefreshToken) => {
+  const nowDate = dayjs().toDate();
+
+  if (token.expires_at <= nowDate) {
     throw new CustomError({
       statusCode: 400,
-      message: "`expires_at` must be after `created_at`.",
+      message: "`expires_at` must be in the future.",
     });
   }
 });

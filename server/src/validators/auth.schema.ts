@@ -13,29 +13,14 @@ import {
   USERNAME_MIN,
 } from "@/models/User.model.js";
 
-export const loginSchema = Joi.object({
-  email: Joi.string().label("Email").trim().lowercase().email().required().messages({
-    "string.base": "Email must be a string.",
-    "string.empty": "Email must be a non-empty string.",
-    "string.email": "Email must be a valid email address.",
-    "any.required": "An email is required.",
-  }),
-  password: Joi.string().label("Password").trim().required().messages({
-    "string.base": "Password must be a string.",
-    "string.empty": "Password must be a non-empty string.",
-    "any.required": "A password is required.",
-  }),
-});
-
-export const registerSchema = Joi.object({
-  email: Joi.string().label("Email").trim().lowercase().email().required().messages({
+export const registerUserBodySchema = Joi.object({
+  email: Joi.string().trim().lowercase().email().required().messages({
     "string.base": "Email must be a string.",
     "string.empty": "Email must be a non-empty string.",
     "string.email": "Email must be a valid email address.",
     "any.required": "An email is required.",
   }),
   password: Joi.string()
-    .label("Password")
     .trim()
     .min(PLAIN_PASSWORD_MIN)
     .max(PLAIN_PASSWORD_MAX)
@@ -51,7 +36,6 @@ export const registerSchema = Joi.object({
       "any.required": "A password is required.",
     }),
   username: Joi.string()
-    .label("Username")
     .trim()
     .min(USERNAME_MIN)
     .max(USERNAME_MAX)
@@ -67,7 +51,6 @@ export const registerSchema = Joi.object({
       "any.required": "A username is required.",
     }),
   firstName: Joi.string()
-    .label("First Name")
     .trim()
     .min(FIRST_NAME_MIN)
     .max(FIRST_NAME_MAX)
@@ -84,7 +67,6 @@ export const registerSchema = Joi.object({
     }),
 
   lastName: Joi.string()
-    .label("Last Name")
     .trim()
     .min(LAST_NAME_MIN)
     .max(LAST_NAME_MAX)
@@ -101,7 +83,38 @@ export const registerSchema = Joi.object({
     }),
 });
 
-export const requestPasswordResetSchema = Joi.object({
+export const verifyEmailBodySchema = Joi.object({
+  token: Joi.string().trim().required().messages({
+    "string.base": "Email verification token must be a string.",
+    "string.empty": "Email verification token must be a non-empty string.",
+    "any.required": "An email verification token is required.",
+  }),
+});
+
+export const resendVerificationEmailBodySchema = Joi.object({
+  email: Joi.string().trim().lowercase().email().required().messages({
+    "string.base": "Email must be a string.",
+    "string.empty": "Email must be a non-empty string.",
+    "string.email": "Email must be a valid email address.",
+    "any.required": "An email is required.",
+  }),
+});
+
+export const loginUserBodySchema = Joi.object({
+  email: Joi.string().label("Email").trim().lowercase().email().required().messages({
+    "string.base": "Email must be a string.",
+    "string.empty": "Email must be a non-empty string.",
+    "string.email": "Email must be a valid email address.",
+    "any.required": "An email is required.",
+  }),
+  password: Joi.string().label("Password").trim().required().messages({
+    "string.base": "Password must be a string.",
+    "string.empty": "Password must be a non-empty string.",
+    "any.required": "A password is required.",
+  }),
+});
+
+export const requestPasswordResetBodySchema = Joi.object({
   email: Joi.string().label("Email").trim().lowercase().email().required().messages({
     "string.base": "Email must be a string.",
     "string.empty": "Email must be a non-empty string.",
@@ -110,7 +123,7 @@ export const requestPasswordResetSchema = Joi.object({
   }),
 });
 
-export const verifyPasswordResetSchema = Joi.object({
+export const verifyPasswordResetBodySchema = Joi.object({
   token: Joi.string().trim().required().messages({
     "string.base": "Password reset token must be a string.",
     "string.empty": "Password reset token must be a non-empty string.",
@@ -118,7 +131,7 @@ export const verifyPasswordResetSchema = Joi.object({
   }),
 });
 
-export const passwordResetSchema = Joi.object({
+export const passwordResetBodySchema = Joi.object({
   token: Joi.string().trim().required().messages({
     "string.base": "Password reset token must be a string.",
     "string.empty": "Password reset token must be a non-empty string.",

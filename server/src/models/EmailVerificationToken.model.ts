@@ -1,34 +1,35 @@
 import dayjs from "dayjs";
 import { DataTypes, Model } from "sequelize";
 
-import { PASSWORD_RESET_TOKEN_STATUSES } from "@/constants/token.constants.js";
+import { EMAIL_VERIFICATION_TOKEN_STATUSES } from "@/constants/token.constants.js";
 
 import { sequelize } from "@/database/mysql.database.js";
 import CustomError from "@/utils/CustomError.utils.js";
 
-import type { User } from "@/models/index.js";
-import type { PasswordResetTokenStatus } from "@/types/auth.types.js";
+import type User from "@/models/User.model.js";
+import type { EmailVerificationTokenStatus } from "@/types/auth.types.js";
 import type { SaveOptions } from "sequelize";
 
-const { ACTIVE, USED, EXPIRED } = PASSWORD_RESET_TOKEN_STATUSES;
+const { ACTIVE, USED, EXPIRED } = EMAIL_VERIFICATION_TOKEN_STATUSES;
 
 /**
- * The `PasswordResetToken` entity represents a time-limited token
- * used to allow a user to reset their password securely.
+ * The `EmailVerificationToken` entity represents a one-time token
+ * generated when a new user registers or requests email confirmation.
+ * It is used to verify ownership of the email address.
  *
- *  Fields:
- * - `user_id`: Foreign key referencing the user who requested the reset.
+ * Fields:
+ * - `user_id`: Foreign key referencing the user who owns the token.
  * - `token`: Secure unique string used for verification.
  * - `status`: Current status of the token ("active", "used", "expired").
  * - `expires_at`: Expiration timestamp (token is invalid after this point).
  * - `used_at`: Timestamp of when the token was explicitly used (nullable).
  * - `created_at`: Automatic creation timestamp.
  */
-export default class PasswordResetToken extends Model {
+export default class EmailVerificationToken extends Model {
   declare id: string;
   declare user_id: string;
   declare token: string;
-  declare status: PasswordResetTokenStatus;
+  declare status: EmailVerificationTokenStatus;
   declare created_at: Date;
   declare expires_at: Date;
   declare used_at: Date | null;
@@ -36,7 +37,7 @@ export default class PasswordResetToken extends Model {
   declare user?: User;
 
   /**
-   * Checks if the reset token is active and not expired.
+   * Checks if the verification token is active and not expired.
    *
    * @returns {boolean} True if status is "active" and the expiration date is in the future.
    */
@@ -45,7 +46,7 @@ export default class PasswordResetToken extends Model {
   }
 
   /**
-   * Marks the reset token as used.
+   * Marks the verification token as used.
    *
    * @param {SaveOptions} [options] - Additional Sequelize save options (e.g., includes).
    * @returns {Promise<void>}
@@ -59,7 +60,7 @@ export default class PasswordResetToken extends Model {
   }
 }
 
-PasswordResetToken.init(
+EmailVerificationToken.init(
   {
     id: {
       type: DataTypes.UUID,
@@ -78,7 +79,7 @@ PasswordResetToken.init(
       unique: true,
     },
     status: {
-      type: DataTypes.ENUM(...Object.values(PASSWORD_RESET_TOKEN_STATUSES)),
+      type: DataTypes.ENUM(...Object.values(EMAIL_VERIFICATION_TOKEN_STATUSES)),
       allowNull: false,
       defaultValue: ACTIVE,
     },
@@ -93,25 +94,15 @@ PasswordResetToken.init(
   },
   {
     sequelize,
-    modelName: "PasswordResetToken",
-    tableName: "password_reset_tokens",
+    modelName: "EmailVerificationToken",
+    tableName: "email_verification_tokens",
     timestamps: true,
     updatedAt: false,
     createdAt: "created_at",
-    indexes: [
-      {
-        name: "idx_reset_status_expires",
-        fields: ["status", "expires_at"],
-      },
-      {
-        name: "idx_reset_user_status",
-        fields: ["user_id", "status"],
-      },
-    ],
   }
 );
 
-PasswordResetToken.beforeCreate((token: PasswordResetToken) => {
+EmailVerificationToken.beforeCreate((token: EmailVerificationToken) => {
   const nowDate = dayjs().toDate();
 
   if (token.expires_at <= nowDate) {

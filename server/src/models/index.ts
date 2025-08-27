@@ -1,3 +1,4 @@
+import EmailVerificationToken from "@/models/EmailVerificationToken.model.js";
 import Favorite from "@/models/Favorite.model.js";
 import Gender from "@/models/Gender.model.js";
 import Name from "@/models/Name.model.js";
@@ -39,10 +40,25 @@ Name.hasMany(Favorite, { foreignKey: "name_id", as: "favorites" });
 
 User.belongsTo(Role, { foreignKey: "role_id", as: "role" });
 
+EmailVerificationToken.belongsTo(User, { foreignKey: "user_id", as: "user" });
+User.hasMany(EmailVerificationToken, { foreignKey: "user_id", as: "email_verification_tokens" });
+
 RefreshToken.belongsTo(User, { foreignKey: "user_id", as: "user" });
 User.hasMany(RefreshToken, { foreignKey: "user_id", as: "refresh_tokens" });
 
 PasswordResetToken.belongsTo(User, { foreignKey: "user_id", as: "user" });
-User.hasMany(PasswordResetToken, { foreignKey: "user_id", as: "user" });
+User.hasMany(PasswordResetToken, { foreignKey: "user_id", as: "password_reset_tokens" });
 
-export { Favorite, Gender, Name, PasswordResetToken, RefreshToken, Role, Type, TypeAllowedGender, Universe, User };
+export {
+  EmailVerificationToken,
+  Favorite,
+  Gender,
+  Name,
+  PasswordResetToken,
+  RefreshToken,
+  Role,
+  Type,
+  TypeAllowedGender,
+  Universe,
+  User,
+};
